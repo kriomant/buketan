@@ -3,8 +3,13 @@ package net.kriomant.android_svg_res
 import org.apache.batik.transcoder.image.PNGTranscoder
 import org.apache.batik.transcoder._
 import java.io.{File, FileOutputStream, FileInputStream}
+import org.slf4j.LoggerFactory
 
 object Main {
+	val logger = LoggerFactory.getLogger(getClass)
+
+	def array(values: Any*): Array[AnyRef] = values.map(_.asInstanceOf[AnyRef]).toArray
+
 	object ImageKind extends Enumeration {
 		val ActionBar = Value("action-bar")
 	}
@@ -29,6 +34,7 @@ object Main {
 
 			val kind = ImageKind.withName(kindName)
 			val sizes = getImageSizes(kind)
+			logger.debug("Sizes: {}", sizes)
 
 			val transcoder = new PNGTranscoder
 
@@ -42,6 +48,7 @@ object Main {
 
 				transcoder.addTranscodingHint(SVGAbstractTranscoder.KEY_WIDTH, width.toFloat)
 				transcoder.addTranscodingHint(SVGAbstractTranscoder.KEY_HEIGHT, height.toFloat)
+				logger.info("Render {} to {} with size {}x{}", array(sourceFilePath, targetFile, width, height))
 				transcoder.transcode(input, output)
 			}
 

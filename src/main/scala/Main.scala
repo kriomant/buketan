@@ -12,6 +12,9 @@ object Main {
 
 	object ImageKind extends Enumeration {
 		val ActionBar = Value("action-bar")
+		val Notification = Value("notification")
+		val Launcher = Value("launcher")
+		val ListView = Value("list-view")
 	}
 
 	val DENSITIES = Seq("ldpi", "mdpi", "hdpi", "xhdpi")
@@ -19,7 +22,17 @@ object Main {
 	/** Get image sizes for given image kind for ldpi, mdpi, hdpi, xhdpi densities.
 	  */
 	def getImageSizes(kind: ImageKind.Value): Seq[(Int, Int)] = kind match {
+		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_action_bar.html#size11
 		case ImageKind.ActionBar => Seq((18,18), (24,24), (36,36), (48,48))
+
+		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html#size11
+		case ImageKind.Notification => Seq((18,18), (24,24), (36,36), (48,48))
+
+		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_launcher.html#size
+		case ImageKind.Launcher => Seq((36,36), (48,48), (72,72), (96,96))
+
+		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_list.html
+		case ImageKind.ListView => Seq((24,24), (32,32), (48,48), (64,64))
 	}
 
 	def main(args: Array[String]) {
@@ -56,7 +69,7 @@ object Main {
 			println("""Usage:
 				|sbt "run <file.svg> <resource-type> <path/to/resources>"
 				|where
-				|  <resource-type> is one of: action-bar;
+				|  <resource-type> is one of: action-bar, launcher, notification, list-view;
 				|  <path/to/directory> is path to resources directory containing 'drawable-*' directories.
 			""".stripMargin)
 		}

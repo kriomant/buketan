@@ -55,7 +55,13 @@ object Main {
 			val resourcesDirectory = new File(resourcesDirectoryPath)
 			for ((density, (width, height)) <- DENSITIES zip sizes) {
 				val qualifiers = baseQualifiers.copy(screenPixelDensity = Some(density))
+
 				val drawableDirectory = new File(resourcesDirectory, "drawable-%s" format qualifiers)
+				if (!drawableDirectory.exists) {
+					logger.debug("Create '{}' resources directory", drawableDirectory.getName)
+					drawableDirectory.mkdir()
+				}
+
 				val targetFile = new File(drawableDirectory, "%s.png" format baseName)
 
 				val input = new TranscoderInput(new FileInputStream(sourceFile))

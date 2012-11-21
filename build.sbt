@@ -2,7 +2,7 @@ name := "Android SVG resource renderer"
 
 version := "0.1"
 
-scalaVersion := "2.10.0-RC1"
+scalaVersion := "2.10.0-RC2"
 
 libraryDependencies ++= Seq(
 	"org.apache.xmlgraphics" % "batik-transcoder" % "1.7",

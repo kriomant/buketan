@@ -1,6 +1,5 @@
 <component name="libraryTable">
-  <library name="org.apache.xmlgraphics:batik-codec:1.7" type="repository">
-    <properties maven-id="org.apache.xmlgraphics:batik-codec:1.7" />
+  <library name="org.apache.xmlgraphics:batik-codec:1.7">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/lib/batik-codec-1.7.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/batik-awt-util-1.7.jar!/" />

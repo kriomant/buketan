@@ -36,8 +36,9 @@ object Main {
 	}
 
 	def main(args: Array[String]) {
-		if (args.length == 3) {
-			val Array(sourceFilePath, kindName, resourcesDirectoryPath) = args
+		if ((3 to 4) contains args.length) {
+			val Array(sourceFilePath, kindName, resourcesDirectoryPath) = args.take(3)
+			val baseQualifiers = if (args.length >= 4) ResourceQualifiers.parse(args(3)) else ResourceQualifiers()
 
 			val sourceFile = new File(sourceFilePath)
 			val fileName = sourceFile.getName
@@ -53,7 +54,8 @@ object Main {
 
 			val resourcesDirectory = new File(resourcesDirectoryPath)
 			for ((density, (width, height)) <- DENSITIES zip sizes) {
-				val drawableDirectory = new File(resourcesDirectory, "drawable-%s" format density)
+				val qualifiers = baseQualifiers.copy(screenPixelDensity = Some(density))
+				val drawableDirectory = new File(resourcesDirectory, "drawable-%s" format qualifiers)
 				val targetFile = new File(drawableDirectory, "%s.png" format baseName)
 
 				val input = new TranscoderInput(new FileInputStream(sourceFile))
@@ -67,10 +69,13 @@ object Main {
 
 		} else {
 			println("""Usage:
-				|sbt "run <file.svg> <resource-type> <path/to/resources>"
+				|sbt "run <file.svg> <resource-type> <path/to/resources> [<resource-qualifiers>]"
 				|where
 				|  <resource-type> is one of: action-bar, launcher, notification, list-view;
 				|  <path/to/directory> is path to resources directory containing 'drawable-*' directories.
+				|  <resource-qualifiers> are qualifiers added to name of 'drawable-*' directory.
+				|     Resource qualifiers are optional in general, but are required for some types
+				|     of images. If they are required, but you don't need ones, use empty string.
 			""".stripMargin)
 		}
 	}

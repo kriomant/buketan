@@ -15,24 +15,29 @@ object Main {
 		val Notification = Value("notification")
 		val Launcher = Value("launcher")
 		val ListView = Value("list-view")
+		val Tab = Value("tab")
 	}
 
 	val DENSITIES = Seq("ldpi", "mdpi", "hdpi", "xhdpi")
 
 	/** Get image sizes for given image kind for ldpi, mdpi, hdpi, xhdpi densities.
 	  */
-	def getImageSizes(kind: ImageKind.Value): Seq[(Int, Int)] = kind match {
+	def getImageSizes(kind: ImageKind.Value, platformVersion: Option[Int]): Seq[(Int, Int)] = (kind, platformVersion) match {
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_action_bar.html#size11
-		case ImageKind.ActionBar => Seq((18,18), (24,24), (36,36), (48,48))
+		case (ImageKind.ActionBar, _) => Seq((18,18), (24,24), (36,36), (48,48))
 
-		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html#size11
-		case ImageKind.Notification => Seq((18,18), (24,24), (36,36), (48,48))
+		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html
+		case (ImageKind.Notification, Some(v)) if v >= 11 => Seq((18,18), (24,24), (36,36), (48,48))
+		case (ImageKind.Notification, Some(v)) if v >=  9 => Seq((12,19), (16,25), (24,38), (32,50))
+		case (ImageKind.Notification, _      )            => Seq((12,19), (16,25), (24,38), (32,50))
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_launcher.html#size
-		case ImageKind.Launcher => Seq((36,36), (48,48), (72,72), (96,96))
+		case (ImageKind.Launcher, _) => Seq((36,36), (48,48), (72,72), (96,96))
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_list.html
-		case ImageKind.ListView => Seq((24,24), (32,32), (48,48), (64,64))
+		case (ImageKind.ListView, _) => Seq((24,24), (32,32), (48,48), (64,64))
+
+		case (ImageKind.Tab, _) => Seq((24,24), (32,32), (48,48), (64,64))
 	}
 
 	def main(args: Array[String]) {
@@ -47,7 +52,7 @@ object Main {
 			val baseName = fileName.dropRight(4)
 
 			val kind = ImageKind.withName(kindName)
-			val sizes = getImageSizes(kind)
+			val sizes = getImageSizes(kind, baseQualifiers.platformVersion)
 			logger.debug("Sizes: {}", sizes)
 
 			val transcoder = new PNGTranscoder

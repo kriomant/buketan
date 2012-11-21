@@ -79,10 +79,10 @@ object Main {
 			}
 
 		} else {
-			println("""Usage:
+			println(s"""Usage:
 				|sbt "run <file.svg> <resource-type> <path/to/resources> [<resource-qualifiers>]"
 				|where
-				|  <resource-type> is one of: action-bar, launcher, notification, list-view;
+				|  <resource-type> is one of: ${ImageKind.values.mkString(", ")};
 				|  <path/to/directory> is path to resources directory containing 'drawable-*' directories.
 				|  <resource-qualifiers> are qualifiers added to name of 'drawable-*' directory.
 				|     Resource qualifiers are optional in general, but are required for some types

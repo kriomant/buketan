@@ -2,6 +2,9 @@ package net.kriomant.android_svg_res
 
 import java.io.{File, FileOutputStream}
 import org.slf4j.LoggerFactory
+import java.awt.image.{BufferedImage, ByteLookupTable, LookupOp}
+import org.w3c.dom.svg.SVGDocument
+import org.apache.batik.dom.svg.SVGOMDocument
 
 object Main {
 	val logger = LoggerFactory.getLogger(getClass)
@@ -18,24 +21,51 @@ object Main {
 
 	val DENSITIES = Seq("ldpi", "mdpi", "hdpi", "xhdpi")
 
+	type Renderer = (SVGOMDocument, Int, Int) => BufferedImage
+	case class ImageVariant(renderer: Renderer, qualifiers: ResourceQualifiers, sizes: Seq[(Int, Int)])
+
 	/** Get image sizes for given image kind for ldpi, mdpi, hdpi, xhdpi densities.
 	  */
-	def getImageSizes(kind: ImageKind.Value, platformVersion: Option[Int]): Seq[(Int, Int)] = (kind, platformVersion) match {
+	def getImageVariants(kind: ImageKind.Value): Seq[ImageVariant] = kind match {
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_action_bar.html#size11
-		case (ImageKind.ActionBar, _) => Seq((18,18), (24,24), (36,36), (48,48))
+		case ImageKind.ActionBar => Seq(ImageVariant(
+			svg.render,
+			ResourceQualifiers.empty,
+			Seq((18,18), (24,24), (36,36), (48,48))
+		))
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html
-		case (ImageKind.Notification, Some(v)) if v >= 11 => Seq((18,18), (24,24), (36,36), (48,48))
-		case (ImageKind.Notification, Some(v)) if v >=  9 => Seq((12,19), (16,25), (24,38), (32,50))
-		case (ImageKind.Notification, _      )            => Seq((12,19), (16,25), (24,38), (32,50))
+		case ImageKind.Notification => Seq(
+			ImageVariant(
+				renderNotificationV11,
+				ResourceQualifiers(platformVersion=Some(11)),
+				Seq((18,18), (24,24), (36,36), (48,48))
+			),
+			ImageVariant(
+				svg.render,
+				ResourceQualifiers(platformVersion=Some(9)),
+				Seq((12,19), (16,25), (24,38), (32,50))
+			),
+			ImageVariant(
+				svg.render,
+				ResourceQualifiers.empty,
+				Seq((19,19), (25,25), (38,38), (50,50))
+			)
+		)
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_launcher.html#size
-		case (ImageKind.Launcher, _) => Seq((36,36), (48,48), (72,72), (96,96))
+		case ImageKind.Launcher => Seq(ImageVariant(
+			svg.render, ResourceQualifiers.empty, Seq((36,36), (48,48), (72,72), (96,96))
+		))
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_list.html
-		case (ImageKind.ListView, _) => Seq((24,24), (32,32), (48,48), (64,64))
+		case ImageKind.ListView => Seq(ImageVariant(
+			svg.render, ResourceQualifiers.empty, Seq((24,24), (32,32), (48,48), (64,64))
+		))
 
-		case (ImageKind.Tab, _) => Seq((24,24), (32,32), (48,48), (64,64))
+		case ImageKind.Tab => Seq(ImageVariant(
+			svg.render, ResourceQualifiers.empty, Seq((24,24), (32,32), (48,48), (64,64))
+		))
 	}
 
 	def main(args: Array[String]) {
@@ -50,12 +80,16 @@ object Main {
 			val baseName = fileName.dropRight(4)
 
 			val kind = ImageKind.withName(kindName)
-			val sizes = getImageSizes(kind, baseQualifiers.platformVersion)
-			logger.debug("Sizes: {}", sizes)
+			val variants = getImageVariants(kind)
+			if (logger.isDebugEnabled)
+				logger.debug("Variants: {}", variants.map(v => "%s: %s" format (v.qualifiers, v.sizes)).mkString(", "))
 
 			val resourcesDirectory = new File(resourcesDirectoryPath)
-			for ((density, (width, height)) <- DENSITIES zip sizes) {
-				val qualifiers = baseQualifiers.copy(screenPixelDensity = Some(density))
+			for (
+				variant <- variants;
+				(density, (width, height)) <- DENSITIES zip variant.sizes
+			) {
+				val qualifiers = baseQualifiers.update(variant.qualifiers).copy(screenPixelDensity = Some(density))
 
 				val drawableDirectory = new File(resourcesDirectory, "drawable-%s" format qualifiers)
 				if (!drawableDirectory.exists) {
@@ -69,7 +103,8 @@ object Main {
 				val svgDocument = svg.load(sourceFile)
 
 				logger.info("Render {} to {} with size {}x{}", array(sourceFilePath, targetFile, width, height))
-				val image = svg.render(svgDocument, targetFile, width, height)
+				val image = svg.render(svgDocument, width, height)
+				invertImageInPlace(image)
 				val output = new FileOutputStream(targetFile)
 
 				svg.savePng(image, output)
@@ -87,5 +122,22 @@ object Main {
 				|     of images. If they are required, but you don't need ones, use empty string.
 			""".stripMargin)
 		}
+	}
+
+	def renderNotificationV11(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
+		val image = svg.render(doc, width, height)
+		invertImageInPlace(image)
+		image
+	}
+
+	def invertImageInPlace(image: BufferedImage) {
+		val noopTable = (0 to 255).map(_.toByte).toArray
+		val invertionTable = noopTable.reverse
+		val op = new LookupOp(
+			// I don't understand why alpha channel is third (not first or last), but it works this way only.
+			new ByteLookupTable(0, Array(invertionTable, invertionTable, noopTable, invertionTable)),
+			null
+		)
+		op.filter(image, image)
 	}
 }

@@ -45,6 +45,29 @@ case class ResourceQualifiers(
 		_primaryNonTouchNavigationMethod,
 		platformVersion map {"v" + _}
 	).flatten.mkString("-")
+	
+	def update(q: ResourceQualifiers): ResourceQualifiers = {
+		ResourceQualifiers(
+			q._mobileCountryAndNetworkCodes orElse _mobileCountryAndNetworkCodes,
+			q._languageAndRegion orElse _languageAndRegion,
+			q._layoutDirection orElse _layoutDirection,
+			q._smallestWidth orElse _smallestWidth,
+			q._availableWidth orElse _availableWidth,
+			q._availableHeight orElse _availableHeight,
+			q._screenSize orElse _screenSize,
+			q._screenAspect orElse _screenAspect,
+			q._screenOrientation orElse _screenOrientation,
+			q._uiMode orElse _uiMode,
+			q._nightMode orElse _nightMode,
+			q.screenPixelDensity orElse screenPixelDensity,
+			q._touchscreenType orElse _touchscreenType,
+			q._keyboardAvailability orElse _keyboardAvailability,
+			q._primaryTextInputMethod orElse _primaryTextInputMethod,
+			q._navigationKeyAvailability orElse _navigationKeyAvailability,
+			q._primaryNonTouchNavigationMethod orElse _primaryNonTouchNavigationMethod,
+			q.platformVersion orElse platformVersion
+		)
+	}
 }
 
 object ResourceQualifiers {
@@ -112,4 +135,6 @@ object ResourceQualifiers {
 	// and inject screen density qualifier.
 	// http://developer.android.com/guide/topics/resources/providing-resources.html#table2
 	def parse(s: String) = P.parse(s)
+
+	val empty = ResourceQualifiers()
 }

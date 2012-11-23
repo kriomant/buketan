@@ -26,7 +26,7 @@ package object svg {
 		f.createDocument(namespaceURI, documentElement, null, stream).asInstanceOf[SVGOMDocument]
 	}
 
-	def render(svgDocument: SVGOMDocument, targetFile: File, width: Int, height: Int): BufferedImage = {
+	def render(svgDocument: SVGOMDocument, width: Int, height: Int): BufferedImage = {
 		val userAgent = new UserAgentAdapter
 		val ctx = if (svgDocument.isSVG12) new SVG12BridgeContext(userAgent) else new BridgeContext(userAgent)
 		val builder = new GVTBuilder

@@ -1,8 +1,6 @@
 package net.kriomant.android_svg_res
 
-import org.apache.batik.transcoder.image.PNGTranscoder
-import org.apache.batik.transcoder._
-import java.io.{File, FileOutputStream, FileInputStream}
+import java.io.{File, FileOutputStream}
 import org.slf4j.LoggerFactory
 
 object Main {
@@ -55,8 +53,6 @@ object Main {
 			val sizes = getImageSizes(kind, baseQualifiers.platformVersion)
 			logger.debug("Sizes: {}", sizes)
 
-			val transcoder = new PNGTranscoder
-
 			val resourcesDirectory = new File(resourcesDirectoryPath)
 			for ((density, (width, height)) <- DENSITIES zip sizes) {
 				val qualifiers = baseQualifiers.copy(screenPixelDensity = Some(density))
@@ -69,20 +65,22 @@ object Main {
 
 				val targetFile = new File(drawableDirectory, "%s.png" format baseName)
 
-				val input = new TranscoderInput(new FileInputStream(sourceFile))
-				val output = new TranscoderOutput(new FileOutputStream(targetFile))
+				// Load SVG document.
+				val svgDocument = svg.load(sourceFile)
 
-				transcoder.addTranscodingHint(SVGAbstractTranscoder.KEY_WIDTH, width.toFloat)
-				transcoder.addTranscodingHint(SVGAbstractTranscoder.KEY_HEIGHT, height.toFloat)
 				logger.info("Render {} to {} with size {}x{}", array(sourceFilePath, targetFile, width, height))
-				transcoder.transcode(input, output)
+				val image = svg.render(svgDocument, targetFile, width, height)
+				val output = new FileOutputStream(targetFile)
+
+				svg.savePng(image, output)
 			}
 
 		} else {
+			val kinds = ImageKind.values.mkString(", ")
 			println(s"""Usage:
 				|sbt "run <file.svg> <resource-type> <path/to/resources> [<resource-qualifiers>]"
 				|where
-				|  <resource-type> is one of: ${ImageKind.values.mkString(", ")};
+				|  <resource-type> is one of: $kinds;
 				|  <path/to/directory> is path to resources directory containing 'drawable-*' directories.
 				|  <resource-qualifiers> are qualifiers added to name of 'drawable-*' directory.
 				|     Resource qualifiers are optional in general, but are required for some types

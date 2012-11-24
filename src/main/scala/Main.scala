@@ -48,7 +48,7 @@ object Main {
 				Seq((12,19), (16,25), (24,38), (32,50))
 			),
 			ImageVariant(
-				svg.render,
+				renderNotificationPreV9,
 				ResourceQualifiers.empty,
 				Seq((19,19), (25,25), (38,38), (50,50))
 			)
@@ -122,6 +122,41 @@ object Main {
 				|     of images. If they are required, but you don't need ones, use empty string.
 			""".stripMargin)
 		}
+	}
+
+	// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html#icon1
+	def renderNotificationPreV9(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
+		assert(width == height)
+
+		val safeframeWidth = (width.toFloat / 12.5).round.toInt
+		val cornerRadius = safeframeWidth
+		val padding = safeframeWidth
+		val backgroundSize = width - 2*safeframeWidth
+		val iconSize = backgroundSize - 2*padding
+
+		val asset = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+		val gradient = new GradientPaint(
+			0, safeframeWidth, new Color(105,105,105),
+			0, safeframeWidth+backgroundSize, new Color(10,10,10)
+		)
+		val gc = asset.createGraphics()
+		gc.setPaint(gradient)
+		gc.fillRoundRect(safeframeWidth, safeframeWidth, backgroundSize, backgroundSize, cornerRadius, cornerRadius)
+
+		val foreground = new BufferedImage(iconSize, iconSize, BufferedImage.TYPE_INT_ARGB)
+		val fgc = foreground.createGraphics()
+		fgc.setPaint(Color.white)
+		fgc.fillRect(0, 0, iconSize, iconSize)
+
+		val icon = svg.render(doc, iconSize, iconSize)
+		fgc.setComposite(AlphaComposite.DstIn)
+		fgc.drawImage(icon, null, 0, 0)
+		fgc.dispose()
+
+		gc.drawImage(foreground, null, safeframeWidth+padding, safeframeWidth+padding)
+		gc.dispose()
+
+		asset
 	}
 
 	// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html#style9

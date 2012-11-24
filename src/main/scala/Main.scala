@@ -144,20 +144,18 @@ object Main {
 		asset
 	}
 
-	def renderNotificationV11(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
-		val image = svg.render(doc, width, height)
-		invertImageInPlace(image)
-		image
-	}
+	def renderNotificationV11(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {//
+		// Create image filled with white.
+		val asset = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+		val background = Color.white
+		val gc = asset.createGraphics()
+		gc.setPaint(background)
+		gc.fillRect(0, 0, width, height)
 
-	def invertImageInPlace(image: BufferedImage) {
-		val noopTable = (0 to 255).map(_.toByte).toArray
-		val invertionTable = noopTable.reverse
-		val op = new LookupOp(
-			// I don't understand why alpha channel is third (not first or last), but it works this way only.
-			new ByteLookupTable(0, Array(invertionTable, invertionTable, noopTable, invertionTable)),
-			null
-		)
-		op.filter(image, image)
+		val image = svg.render(doc, width, height)
+		gc.setComposite(AlphaComposite.DstIn)
+		gc.drawImage(image, null, 0, 0)
+
+		asset
 	}
 }

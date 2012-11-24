@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import java.awt.image.{BufferedImage, ByteLookupTable, LookupOp}
 import org.w3c.dom.svg.SVGDocument
 import org.apache.batik.dom.svg.SVGOMDocument
+import java.awt.{AlphaComposite, Color, GradientPaint, Rectangle}
 
 object Main {
 	val logger = LoggerFactory.getLogger(getClass)
@@ -42,7 +43,7 @@ object Main {
 				Seq((18,18), (24,24), (36,36), (48,48))
 			),
 			ImageVariant(
-				svg.render,
+				renderNotificationV9,
 				ResourceQualifiers(platformVersion=Some(9)),
 				Seq((12,19), (16,25), (24,38), (32,50))
 			),
@@ -103,8 +104,7 @@ object Main {
 				val svgDocument = svg.load(sourceFile)
 
 				logger.info("Render {} to {} with size {}x{}", array(sourceFilePath, targetFile, width, height))
-				val image = svg.render(svgDocument, width, height)
-				invertImageInPlace(image)
+				val image = variant.renderer(svgDocument, width, height)
 				val output = new FileOutputStream(targetFile)
 
 				svg.savePng(image, output)
@@ -122,6 +122,26 @@ object Main {
 				|     of images. If they are required, but you don't need ones, use empty string.
 			""".stripMargin)
 		}
+	}
+
+	// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html#style9
+	def renderNotificationV9(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
+		// Full asset is rectangular, but icon must be drawn in centered square are.
+		assert(height > width)
+		val yOffset = (height - width) / 2
+
+		// Icon is filled with gradient.
+		val asset = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+		val gradient = new GradientPaint(0, yOffset, new Color(0x919191), 0, yOffset + width, new Color(0x828282))
+		val gc = asset.createGraphics()
+		gc.setPaint(gradient)
+		gc.fillRect(0, yOffset, width, width)
+
+		val icon = svg.render(doc, width, width)
+		gc.setComposite(AlphaComposite.DstIn)
+		gc.drawImage(icon, null, 0, yOffset)
+
+		asset
 	}
 
 	def renderNotificationV11(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {

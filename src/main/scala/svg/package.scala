@@ -13,6 +13,9 @@ import org.apache.batik.gvt.GraphicsNode
 import org.apache.batik.bridge.svg12.SVG12BridgeContext
 import org.w3c.dom.svg.SVGSVGElement
 import java.awt.geom.AffineTransform
+import org.apache.batik.ext.awt.RenderingHintsKeyExt
+import java.lang.ref.WeakReference
+import org.apache.batik.ext.awt.image.GraphicsUtil
 
 package object svg {
 
@@ -48,7 +51,11 @@ package object svg {
 		}
 
 		val image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-		val gr = image.createGraphics()
+
+		// Use Batik's utility method for creating Graphics2D which properly initializes it
+		// otherwise Batik may print "Graphics2D from BufferedImage lacks BUFFERED_IMAGE hint" warning
+		// for some images.
+		val gr = GraphicsUtil.createGraphics(image)
 		gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 		gr.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY)
 		gr.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)

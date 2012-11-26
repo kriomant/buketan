@@ -99,6 +99,9 @@ object Main {
 			if (logger.isDebugEnabled)
 				logger.debug("Variants: {}", variants.map(v => "%s: %s" format (v.qualifiers, v.sizes)).mkString(", "))
 
+			// Load SVG document.
+			val svgDocument = svg.load(sourceFile)
+
 			val resourcesDirectory = new File(resourcesDirectoryPath)
 			for (
 				variant <- variants;
@@ -114,9 +117,6 @@ object Main {
 
 				val suffix = variant.nameSuffix.map("_" + _).getOrElse("")
 				val targetFile = new File(drawableDirectory, "%s%s.png" format (baseName, suffix))
-
-				// Load SVG document.
-				val svgDocument = svg.load(sourceFile)
 
 				logger.info("Render {} to {} with size {}x{}", array(sourceFilePath, targetFile, width, height))
 				val image = variant.renderer(svgDocument, width, height)

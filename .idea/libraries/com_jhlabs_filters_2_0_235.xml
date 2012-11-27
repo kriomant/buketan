@@ -1,6 +1,5 @@
 <component name="libraryTable">
-  <library name="com.jhlabs:filters:2.0.235" type="repository">
-    <properties maven-id="com.jhlabs:filters:2.0.235" />
+  <library name="com.jhlabs:filters:2.0.235">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/lib/filters-2.0.235.jar!/" />
     </CLASSES>

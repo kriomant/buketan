@@ -3,10 +3,9 @@ package net.kriomant.android_svg_res
 import java.io.{File, FileOutputStream}
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
-import org.apache.batik.dom.svg.{SVGOMElement, SVGOMAElement, SVGOMDocument}
-import java.awt.{Rectangle, AlphaComposite, Color, GradientPaint}
+import org.apache.batik.dom.svg.SVGOMDocument
+import java.awt.{AlphaComposite, Color, GradientPaint}
 import java.awt.geom.{AffineTransform, Rectangle2D}
-import org.w3c.dom.Element
 import org.apache.batik.gvt.GraphicsNode
 
 object Main {

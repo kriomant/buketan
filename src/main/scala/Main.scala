@@ -3,8 +3,11 @@ package net.kriomant.android_svg_res
 import java.io.{File, FileOutputStream}
 import org.slf4j.LoggerFactory
 import java.awt.image.{BufferedImage}
-import org.apache.batik.dom.svg.SVGOMDocument
-import java.awt.{AlphaComposite, Color, GradientPaint}
+import org.apache.batik.dom.svg.{SVGOMElement, SVGOMAElement, SVGOMDocument}
+import java.awt.{Rectangle, AlphaComposite, Color, GradientPaint}
+import java.awt.geom.{AffineTransform, Rectangle2D}
+import org.w3c.dom.Element
+import org.apache.batik.gvt.GraphicsNode
 
 object Main {
 	val logger = LoggerFactory.getLogger(getClass)
@@ -17,6 +20,7 @@ object Main {
 		val Launcher = Value("launcher")
 		val ListView = Value("list-view")
 		val Tab = Value("tab")
+		val NinePatch = Value("9-patch")
 	}
 
 	val DENSITIES = Seq("ldpi", "mdpi", "hdpi", "xhdpi")
@@ -81,6 +85,10 @@ object Main {
 				svg.render, ResourceQualifiers.empty, Seq((24,24), (32,32), (48,48), (64,64))
 			)
 		)
+
+		case ImageKind.NinePatch => Seq(ImageVariant(
+			renderNinePatch, ResourceQualifiers.empty, Seq((24,24), (32,32), (48,48), (64,64))
+		))
 	}
 
 	def main(args: Array[String]) {
@@ -137,6 +145,72 @@ object Main {
 				|     of images. If they are required, but you don't need ones, use empty string.
 			""".stripMargin)
 		}
+	}
+
+	/** Render 9-patch image.
+	  *
+	  * 9-patch image format is described at
+	  * http://developer.android.com/guide/topics/graphics/2d-graphics.html#nine-patch
+	  */
+	def renderNinePatch(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
+		val CONTENT_AREA_ELEMENT_ID = "content-area"
+		val STRETCH_AREA_ELEMENT_ID = "stretch-area"
+
+		val contentAreaElement = Option(doc.getElementById(CONTENT_AREA_ELEMENT_ID))
+		if (! contentAreaElement.map(_.getTagName == "rect").getOrElse(true))
+			throw new Exception("Content area (element with ID '%s') must be rectangle" format CONTENT_AREA_ELEMENT_ID)
+
+		val stretchAreaElement = doc.getElementById(STRETCH_AREA_ELEMENT_ID)
+		if (stretchAreaElement == null)
+			throw new Exception("9-patch SVG document must contain rectangle with ID '%s'" format STRETCH_AREA_ELEMENT_ID)
+		if (stretchAreaElement.getTagName != "rect")
+			throw new Exception("Stretch area (element with ID '%s') must be rectangle" format STRETCH_AREA_ELEMENT_ID)
+
+		// Create SVG content and GVT element. Tell context to maintain mapping between
+		// source XML nodes and graphic elements.
+		val (ctx, gvtRoot) = svg.prepareRendering(doc, true)
+		val transformation = svg.getTransformation(ctx, width, height)
+
+		def getBounds(gn: GraphicsNode): Rectangle2D = {
+			val bounds = gn.getBounds
+			val tr = new AffineTransform(gn.getGlobalTransform)
+			tr.preConcatenate(transformation)
+			tr.createTransformedShape(bounds).getBounds2D
+		}
+
+		val contentGraphicsNode = contentAreaElement.map(ctx.getGraphicsNode(_))
+		val contentArea = contentGraphicsNode.map(getBounds)
+
+		val stretchGraphicsNode = ctx.getGraphicsNode(stretchAreaElement)
+		val stretchArea = getBounds(stretchGraphicsNode)
+
+		// Hide *-area elements.
+		contentGraphicsNode.foreach { n => n.setVisible(false) }
+		stretchGraphicsNode.setVisible(false)
+
+		val icon = svg.render(ctx, gvtRoot, width, height)
+
+		val image = new BufferedImage(width+2, height+2, BufferedImage.TYPE_INT_ARGB)
+		val gc = image.createGraphics()
+		gc.drawImage(icon, null, 1, 1)
+
+		gc.setPaint(Color.black)
+
+		// Stretch area.
+		logger.trace("Stretch area: {}", stretchArea)
+		gc.drawLine(stretchArea.getMinX.toInt+1, 0, stretchArea.getMaxX.toInt+1, 0)
+		gc.drawLine(0, stretchArea.getMinY.toInt+1, 0, stretchArea.getMaxY.toInt+1)
+
+		// Content area.
+		contentArea.foreach { area =>
+			logger.trace("Content area: {}", area)
+			gc.drawLine(area.getMinX.toInt+1, height+1, area.getMaxX.toInt+1, height+1)
+			gc.drawLine(width+1, area.getMinY.toInt+1, width+1, area.getMaxY.toInt+1)
+		}
+
+		gc.dispose()
+
+		image
 	}
 
 	def renderTabV5Unselected(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {

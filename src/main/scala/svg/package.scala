@@ -13,11 +13,12 @@ import org.apache.batik.gvt.GraphicsNode
 import org.apache.batik.bridge.svg12.SVG12BridgeContext
 import org.w3c.dom.svg.SVGSVGElement
 import java.awt.geom.AffineTransform
-import org.apache.batik.ext.awt.RenderingHintsKeyExt
-import java.lang.ref.WeakReference
 import org.apache.batik.ext.awt.image.GraphicsUtil
+import org.slf4j.LoggerFactory
+import utils.array
 
 package object svg {
+	val logger = LoggerFactory.getLogger(getClass)
 
 	def load(file: File): SVGOMDocument = {
 		val stream = new FileInputStream(file)
@@ -29,26 +30,44 @@ package object svg {
 		f.createDocument(namespaceURI, documentElement, null, stream).asInstanceOf[SVGOMDocument]
 	}
 
-	def render(svgDocument: SVGOMDocument, width: Int, height: Int): BufferedImage = {
+	def prepareRendering(doc: SVGOMDocument, createGvtMapping: Boolean): (BridgeContext, GraphicsNode) = {
 		val userAgent = new UserAgentAdapter
-		val ctx = if (svgDocument.isSVG12) new SVG12BridgeContext(userAgent) else new BridgeContext(userAgent)
+		val ctx = if (doc.isSVG12) new SVG12BridgeContext(userAgent) else new BridgeContext(userAgent)
+		ctx.setDynamic(createGvtMapping)
 		val builder = new GVTBuilder
-		var gvtRoot: GraphicsNode = builder.build(ctx, svgDocument)
-		val root: SVGSVGElement = svgDocument.getRootElement
+		var gvtRoot: GraphicsNode = builder.build(ctx, doc)
+		(ctx, gvtRoot)
+	}
 
+	def render(svgDocument: SVGOMDocument, width: Int, height: Int): BufferedImage = {
+		val (ctx, gvtRoot) = prepareRendering(svgDocument, false)
+		render(ctx, gvtRoot, width, height)
+	}
+
+	def getTransformation(ctx: BridgeContext, width: Int, height: Int): AffineTransform = {
 		// Get document area to render and create corresponding transformation.
 		// If viewBox is provided in SVG document, use it, otherwise render whole document.
-		val transformation = root.getAttributeNS(null, SVGConstants.SVG_VIEW_BOX_ATTRIBUTE) match {
+		val doc = ctx.getDocument.asInstanceOf[SVGOMDocument]
+		val root = doc.getRootElement
+		root.getAttributeNS(null, SVGConstants.SVG_VIEW_BOX_ATTRIBUTE) match {
 			case null | "" =>
 				val docWidth: Float = ctx.getDocumentSize.getWidth.asInstanceOf[Float]
 				val docHeight: Float = ctx.getDocumentSize.getHeight.asInstanceOf[Float]
 				val scale: Float = Math.min(width / docWidth, height / docHeight)
+				logger.info("Use document dimensions: {}x{}, scale: {}", array(docWidth, docHeight, scale))
 				AffineTransform.getScaleInstance(scale, scale)
 
 			case viewBoxAttr =>
 				val aspectRatioAttr = root.getAttributeNS(null, SVGConstants.SVG_PRESERVE_ASPECT_RATIO_ATTRIBUTE)
+				logger.info("Use viewBox '{}' and aspectRationAttr '{}'", viewBoxAttr, aspectRatioAttr)
 				ViewBox.getPreserveAspectRatioTransform(root, viewBoxAttr, aspectRatioAttr, width, height, ctx)
 		}
+	}
+
+	def render(ctx: BridgeContext, gvtRoot: GraphicsNode, width: Int, height: Int): BufferedImage = {
+		val root: SVGSVGElement = ctx.getDocument.asInstanceOf[SVGOMDocument].getRootElement
+
+		val transformation = getTransformation(ctx, width, height)
 
 		val image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
 

@@ -97,7 +97,7 @@ object ResourceQualifiers {
 		def _primaryNonTouchNavigationMethod = """(?i)nonav|dpad|trackball|wheel""".r
 		def platformVersion = "v" ~> natural
 
-		def dashed[T](p: Parser[T]): Parser[Option[T]] = (p <~ ("-" | eof))?
+		def dashed[T](p: Parser[T]): Parser[Option[T]] = opt(p <~ ("-" | eof))
 
 		def qualifiers: Parser[ResourceQualifiers] = (
 			dashed(_mobileCountryAndNetworkCodes) ~

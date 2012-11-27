@@ -39,7 +39,7 @@ class svgTest extends FunSpec {
 
 		def getTransformation(xml: String, width: Int, height: Int): AffineTransform = {
 			val doc = svg.loadFromString(xml)
-			val (ctx, _) = svg.prepareRendering(doc, false)
+			val (ctx, _) = svg.prepareRendering(doc, createGvtMapping = false)
 			svg.getTransformation(ctx, width, height)
 		}
 

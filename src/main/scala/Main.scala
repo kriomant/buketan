@@ -2,7 +2,7 @@ package net.kriomant.android_svg_res
 
 import java.io.{File, FileOutputStream}
 import org.slf4j.LoggerFactory
-import java.awt.image.{BufferedImage}
+import java.awt.image.BufferedImage
 import org.apache.batik.dom.svg.{SVGOMElement, SVGOMAElement, SVGOMDocument}
 import java.awt.{Rectangle, AlphaComposite, Color, GradientPaint}
 import java.awt.geom.{AffineTransform, Rectangle2D}
@@ -168,7 +168,7 @@ object Main {
 
 		// Create SVG content and GVT element. Tell context to maintain mapping between
 		// source XML nodes and graphic elements.
-		val (ctx, gvtRoot) = svg.prepareRendering(doc, true)
+		val (ctx, gvtRoot) = svg.prepareRendering(doc, createGvtMapping = true)
 		val transformation = svg.getTransformation(ctx, width, height)
 
 		def getBounds(gn: GraphicsNode): Rectangle2D = {

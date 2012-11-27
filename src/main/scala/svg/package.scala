@@ -1,9 +1,8 @@
 package net.kriomant.android_svg_res
 
-import org.apache.batik.dom.svg.{SAXSVGDocumentFactory, SVGDOMImplementation, SVGOMDocument}
+import org.apache.batik.dom.svg.{SAXSVGDocumentFactory, SVGOMDocument}
 import java.io._
-import java.awt.{RenderingHints, Graphics2D}
-import org.apache.batik.transcoder.{TranscoderOutput, TranscoderInput}
+import java.awt.RenderingHints
 import org.apache.batik.util.{XMLResourceDescriptor, SVGConstants}
 import org.apache.batik.dom.util.DocumentFactory
 import java.awt.image.BufferedImage
@@ -11,7 +10,6 @@ import org.apache.batik.ext.awt.image.codec.png.{PNGImageEncoder, PNGEncodeParam
 import org.apache.batik.bridge.{ViewBox, BridgeContext, GVTBuilder, UserAgentAdapter}
 import org.apache.batik.gvt.GraphicsNode
 import org.apache.batik.bridge.svg12.SVG12BridgeContext
-import org.w3c.dom.svg.SVGSVGElement
 import java.awt.geom.AffineTransform
 import org.apache.batik.ext.awt.image.GraphicsUtil
 import org.slf4j.LoggerFactory
@@ -49,8 +47,10 @@ package object svg {
 	}
 
 	def render(svgDocument: SVGOMDocument, width: Int, height: Int): BufferedImage = {
-		val (ctx, gvtRoot) = prepareRendering(svgDocument, false)
-		render(ctx, gvtRoot, width, height)
+		val (ctx, gvtRoot) = prepareRendering(svgDocument, createGvtMapping = false)
+		val image = render(ctx, gvtRoot, width, height)
+		ctx.dispose()
+		image
 	}
 
 	def getTransformation(ctx: BridgeContext, width: Int, height: Int): AffineTransform = {
@@ -74,8 +74,6 @@ package object svg {
 	}
 
 	def render(ctx: BridgeContext, gvtRoot: GraphicsNode, width: Int, height: Int): BufferedImage = {
-		val root: SVGSVGElement = ctx.getDocument.asInstanceOf[SVGOMDocument].getRootElement
-
 		val transformation = getTransformation(ctx, width, height)
 
 		val image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
@@ -90,8 +88,6 @@ package object svg {
 		gr.setTransform(transformation)
 		gvtRoot.paint(gr)
 		gr.dispose()
-
-		ctx.dispose
 
 		image
 	}

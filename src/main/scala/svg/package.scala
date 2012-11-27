@@ -1,7 +1,7 @@
 package net.kriomant.android_svg_res
 
 import org.apache.batik.dom.svg.{SAXSVGDocumentFactory, SVGDOMImplementation, SVGOMDocument}
-import java.io.{OutputStream, FileOutputStream, FileInputStream, File}
+import java.io._
 import java.awt.{RenderingHints, Graphics2D}
 import org.apache.batik.transcoder.{TranscoderOutput, TranscoderInput}
 import org.apache.batik.util.{XMLResourceDescriptor, SVGConstants}
@@ -21,13 +21,22 @@ package object svg {
 	val logger = LoggerFactory.getLogger(getClass)
 
 	def load(file: File): SVGOMDocument = {
-		val stream = new FileInputStream(file)
+		val reader = new FileReader(file)
+		load(reader)
+	}
+
+	def loadFromString(s: String): SVGOMDocument = {
+		val reader = new StringReader(s)
+		load(reader)
+	}
+
+	def load(reader: Reader): SVGOMDocument = {
 		val namespaceURI: String = SVGConstants.SVG_NAMESPACE_URI
 		val documentElement: String = SVGConstants.SVG_SVG_TAG
 		val parserClassname = XMLResourceDescriptor.getXMLParserClassName
 		val f: DocumentFactory = new SAXSVGDocumentFactory(parserClassname)
 		f.setValidating(false)
-		f.createDocument(namespaceURI, documentElement, null, stream).asInstanceOf[SVGOMDocument]
+		f.createDocument(namespaceURI, documentElement, null, reader).asInstanceOf[SVGOMDocument]
 	}
 
 	def prepareRendering(doc: SVGOMDocument, createGvtMapping: Boolean): (BridgeContext, GraphicsNode) = {

@@ -9,6 +9,7 @@ libraryDependencies ++= Seq(
 	"org.apache.xmlgraphics" % "batik-codec" % "1.7",
 	"ch.qos.logback" % "logback-classic" % "0.9.30",
 	"com.jhlabs" % "filters" % "2.0.235",
+	"net.elehack.argparse4s" %% "argparse4s" % "0.3-SNAPSHOT",
 	"org.scalatest" % "scalatest_2.10.0-RC2" % "1.8" % "test"
 )
 

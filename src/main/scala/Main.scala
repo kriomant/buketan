@@ -7,6 +7,9 @@ import org.apache.batik.dom.svg.SVGOMDocument
 import java.awt.{AlphaComposite, Color, GradientPaint}
 import java.awt.geom.{AffineTransform, Rectangle2D}
 import org.apache.batik.gvt.GraphicsNode
+import sun.security.internal.interfaces.TlsMasterSecret
+import net.elehack.argparse4s.{ExecutionContext, Subcommand, MasterCommand}
+import net.sourceforge.argparse4j.inf.ArgumentParserException
 
 object Main {
 	val logger = LoggerFactory.getLogger(getClass)
@@ -90,59 +93,80 @@ object Main {
 		))
 	}
 
+	class FixedSizeResourceSubcommand(val name: String, val kind: ImageKind.Value) extends Subcommand {
+		val file = argument[File]("svg-file")
+		val resourcesDirectory = argument[File]("resources-directory").metavar("PATH")
+
+		val qualifiers = option[String]('q', "resource-qualifiers")
+			.default("")
+			.metavar("RESOURCE-QUALIFIERS")
+			.help("additional resource qualifiers")
+
+		def run()(implicit exc: ExecutionContext) {
+			Main.convert(kind, file.get, resourcesDirectory.get, ResourceQualifiers.parse(qualifiers.get))
+		}
+	}
+
+	object Command extends MasterCommand {
+		val name: String = "android-svg-res"
+
+		def run()(implicit exc: ExecutionContext) {
+			subcommand match {
+				case None => println("Usage")
+				case Some(subcmd) => subcmd.run()
+			}
+		}
+
+		def subcommands: Seq[Subcommand] = ImageKind.values.toSeq.map { kind =>
+			new FixedSizeResourceSubcommand(kind.toString, kind)
+		}
+	}
+
 	def main(args: Array[String]) {
-		if ((3 to 4) contains args.length) {
-			val Array(sourceFilePath, kindName, resourcesDirectoryPath) = args.take(3)
-			val baseQualifiers = if (args.length >= 4) ResourceQualifiers.parse(args(3)) else ResourceQualifiers()
+		val exitCode = try {
+			Command.run(args)
+			0
+		} catch {
+			case e: ArgumentParserException =>
+				System.err.println("%s\nUse '--help' for help." format e.getMessage)
+				1
+		}
+		System.exit(exitCode)
+	}
 
-			val sourceFile = new File(sourceFilePath)
-			val fileName = sourceFile.getName
-			if (! (fileName endsWith ".svg"))
-				throw new IllegalArgumentException("Source file must have .SVG extension")
-			val baseName = fileName.dropRight(4)
+	def convert(kind: ImageKind.Value, sourceFile: File, resourcesDirectory: File, baseQualifiers: ResourceQualifiers) {
+		val fileName = sourceFile.getName
+		if (! (fileName endsWith ".svg"))
+			throw new IllegalArgumentException("Source file must have .SVG extension")
+		val baseName = fileName.dropRight(4)
 
-			val kind = ImageKind.withName(kindName)
-			val variants = getImageVariants(kind)
-			if (logger.isDebugEnabled)
-				logger.debug("Variants: {}", variants.map(v => "%s: %s" format (v.qualifiers, v.sizes)).mkString(", "))
+		val variants = getImageVariants(kind)
+		if (logger.isDebugEnabled)
+			logger.debug("Variants: {}", variants.map(v => "%s: %s" format (v.qualifiers, v.sizes)).mkString(", "))
 
-			// Load SVG document.
-			val svgDocument = svg.load(sourceFile)
+		// Load SVG document.
+		val svgDocument = svg.load(sourceFile)
 
-			val resourcesDirectory = new File(resourcesDirectoryPath)
-			for (
-				variant <- variants;
-				(density, (width, height)) <- DENSITIES zip variant.sizes
-			) {
-				val qualifiers = baseQualifiers.update(variant.qualifiers).copy(screenPixelDensity = Some(density))
+		for (
+			variant <- variants;
+			(density, (width, height)) <- DENSITIES zip variant.sizes
+		) {
+			val qualifiers = baseQualifiers.update(variant.qualifiers).copy(screenPixelDensity = Some(density))
 
-				val drawableDirectory = new File(resourcesDirectory, "drawable-%s" format qualifiers)
-				if (!drawableDirectory.exists) {
-					logger.debug("Create '{}' resources directory", drawableDirectory.getName)
-					drawableDirectory.mkdir()
-				}
-
-				val suffix = variant.nameSuffix.map("_" + _).getOrElse("")
-				val targetFile = new File(drawableDirectory, "%s%s.png" format (baseName, suffix))
-
-				logger.info("Render {} to {} with size {}x{}", array(sourceFilePath, targetFile, width, height))
-				val image = variant.renderer(svgDocument, width, height)
-				val output = new FileOutputStream(targetFile)
-
-				svg.savePng(image, output)
+			val drawableDirectory = new File(resourcesDirectory, "drawable-%s" format qualifiers)
+			if (!drawableDirectory.exists) {
+				logger.debug("Create '{}' resources directory", drawableDirectory.getName)
+				drawableDirectory.mkdir()
 			}
 
-		} else {
-			val kinds = ImageKind.values.mkString(", ")
-			println(s"""Usage:
-				|sbt "run <file.svg> <resource-type> <path/to/resources> [<resource-qualifiers>]"
-				|where
-				|  <resource-type> is one of: $kinds;
-				|  <path/to/directory> is path to resources directory containing 'drawable-*' directories.
-				|  <resource-qualifiers> are qualifiers added to name of 'drawable-*' directory.
-				|     Resource qualifiers are optional in general, but are required for some types
-				|     of images. If they are required, but you don't need ones, use empty string.
-			""".stripMargin)
+			val suffix = variant.nameSuffix.map("_" + _).getOrElse("")
+			val targetFile = new File(drawableDirectory, "%s%s.png" format (baseName, suffix))
+
+			logger.info("Render {} to {} with size {}x{}", array(sourceFile.getPath, targetFile, width, height))
+			val image = variant.renderer(svgDocument, width, height)
+			val output = new FileOutputStream(targetFile)
+
+			svg.savePng(image, output)
 		}
 	}
 

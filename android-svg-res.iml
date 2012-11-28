@@ -42,6 +42,24 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="com.jhlabs:filters:2.0.235" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.ivy2/local/net.elehack.argparse4s/argparse4s_2.10/0.3-SNAPSHOT/jars/argparse4s_2.10.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.ivy2/cache/net.sourceforge.argparse4j/argparse4j/jars/argparse4j-0.2.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
 

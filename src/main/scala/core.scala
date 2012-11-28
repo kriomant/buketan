@@ -1,17 +1,16 @@
 package net.kriomant.android_svg_res
 
-import java.io.{File, FileOutputStream}
-import org.slf4j.LoggerFactory
-import java.awt.image.BufferedImage
 import org.apache.batik.dom.svg.SVGOMDocument
-import java.awt.{AlphaComposite, Color, GradientPaint}
-import java.awt.geom.{AffineTransform, Rectangle2D}
+import java.awt.image.BufferedImage
+import java.io.{FileOutputStream, File}
+import org.slf4j.LoggerFactory
 import org.apache.batik.gvt.GraphicsNode
-import sun.security.internal.interfaces.TlsMasterSecret
-import net.elehack.argparse4s.{ExecutionContext, Subcommand, MasterCommand}
-import net.sourceforge.argparse4j.inf.ArgumentParserException
+import java.awt.geom.{AffineTransform, Rectangle2D}
+import java.awt.{GradientPaint, AlphaComposite, Color}
+import com.jhlabs.image.GaussianFilter
 
-object Main {
+object core {
+
 	val logger = LoggerFactory.getLogger(getClass)
 
 	def array(values: Any*): Array[AnyRef] = values.map(_.asInstanceOf[AnyRef]).toArray
@@ -91,47 +90,6 @@ object Main {
 		case ImageKind.NinePatch => Seq(ImageVariant(
 			renderNinePatch, ResourceQualifiers.empty, Seq((24,24), (32,32), (48,48), (64,64))
 		))
-	}
-
-	class FixedSizeResourceSubcommand(val name: String, val kind: ImageKind.Value) extends Subcommand {
-		val file = argument[File]("svg-file")
-		val resourcesDirectory = argument[File]("resources-directory").metavar("PATH")
-
-		val qualifiers = option[String]('q', "resource-qualifiers")
-			.default("")
-			.metavar("RESOURCE-QUALIFIERS")
-			.help("additional resource qualifiers")
-
-		def run()(implicit exc: ExecutionContext) {
-			Main.convert(kind, file.get, resourcesDirectory.get, ResourceQualifiers.parse(qualifiers.get))
-		}
-	}
-
-	object Command extends MasterCommand {
-		val name: String = "android-svg-res"
-
-		def run()(implicit exc: ExecutionContext) {
-			subcommand match {
-				case None => println("Usage")
-				case Some(subcmd) => subcmd.run()
-			}
-		}
-
-		def subcommands: Seq[Subcommand] = ImageKind.values.toSeq.map { kind =>
-			new FixedSizeResourceSubcommand(kind.toString, kind)
-		}
-	}
-
-	def main(args: Array[String]) {
-		val exitCode = try {
-			Command.run(args)
-			0
-		} catch {
-			case e: ArgumentParserException =>
-				System.err.println("%s\nUse '--help' for help." format e.getMessage)
-				1
-		}
-		System.exit(exitCode)
 	}
 
 	def convert(kind: ImageKind.Value, sourceFile: File, resourcesDirectory: File, baseQualifiers: ResourceQualifiers) {
@@ -269,7 +227,7 @@ object Main {
 		ggc.drawImage(icon, null, padding, padding)
 		ggc.dispose()
 
-		val glow = new com.jhlabs.image.GaussianFilter(width / 8.0f).filter(preGlow, null)
+		val glow = new GaussianFilter(width / 8.0f).filter(preGlow, null)
 
 		val white = new BufferedImage(iconSize, iconSize, BufferedImage.TYPE_INT_ARGB)
 		val wgc = white.createGraphics()

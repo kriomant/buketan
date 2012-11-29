@@ -26,70 +26,88 @@ object core {
 
 	val DENSITIES = Seq("ldpi", "mdpi", "hdpi", "xhdpi")
 
-	type Renderer = (SVGOMDocument, Int, Int) => BufferedImage
+	type Renderer = SVGOMDocument => BufferedImage
 	case class ImageVariant(
 		renderer: Renderer,
-		qualifiers: ResourceQualifiers,
-		sizes: Seq[(Int, Int)],
+		qualifiers: ResourceQualifiers = ResourceQualifiers.empty,
 		nameSuffix: Option[String] = None
 	)
+
+	/** Creates [[net.kriomant.android_svg_res.core.ImageVariant]] for each screen density value.
+	  *
+	  * Feeds `values` one by one to `f` function and modify `qualifiers` field
+	  * in returned `ImageVariant` to have corresponding `screenPixelDensity`.
+	  *
+		* @param values Arbitrary values for ldpi, mdpi, hdpi and xhdpi densities
+	  *               (in that order) for passing to creation function `f`
+	  * @param f Function which received one value from `values` and returns `ImageVariant`
+	  * @tparam T Type of data passed to `f`
+	  * @return Sequence of created `ImageVariant`s
+	  */
+	def mapDensities[T](values: (T, T, T, T))(f: T => ImageVariant): Seq[ImageVariant] = {
+		(values.productIterator.toSeq zip DENSITIES) map { case (value, density) =>
+			val variant = f(value.asInstanceOf[T])
+			variant.copy(qualifiers = variant.qualifiers.copy(screenPixelDensity=Some(density)))
+		}
+	}
+
+	/** Creates [[net.kriomant.android_svg_res.core.ImageVariant]] for each screen density value.
+	  *
+	  * Feeds `values` one by one to `f` function and modify `qualifiers` field
+	  * in returned `ImageVariant`s to have corresponding `screenPixelDensity`.
+	  *
+	  * @param values Arbitrary values for ldpi, mdpi, hdpi and xhdpi densities
+	  *               (in that order) for passing to creation function `f`
+	  * @param f Function which received one value from `values` and returns `ImageVariant` sequence
+	  * @tparam T Type of data passed to `f`
+	  * @return Sequence of created `ImageVariant`s
+	  */
+	def flatMapDensities[T](values: (T, T, T, T))(f: T => Seq[ImageVariant]): Seq[ImageVariant] = {
+		(values.productIterator.toSeq zip DENSITIES) flatMap { case (value, density) =>
+			val variants = f(value.asInstanceOf[T])
+			variants map (v => v.copy(qualifiers = v.qualifiers.copy(screenPixelDensity=Some(density))))
+		}
+	}
 
 	/** Get image sizes for given image kind for ldpi, mdpi, hdpi, xhdpi densities.
 	  */
 	def getImageVariants(kind: ImageKind.Value): Seq[ImageVariant] = kind match {
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_action_bar.html#size11
-		case ImageKind.ActionBar => Seq(ImageVariant(
-			svg.render,
-			ResourceQualifiers.empty,
-			Seq((18,18), (24,24), (36,36), (48,48))
-		))
+		case ImageKind.ActionBar => mapDensities((18, 24, 36, 48)) { size =>
+			ImageVariant(simpleRender(size, size))
+		}
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html
-		case ImageKind.Notification => Seq(
-			ImageVariant(
-				renderNotificationV11,
-				ResourceQualifiers(platformVersion=Some(11)),
-				Seq((18,18), (24,24), (36,36), (48,48))
-			),
-			ImageVariant(
-				renderNotificationV9,
-				ResourceQualifiers(platformVersion=Some(9)),
-				Seq((12,19), (16,25), (24,38), (32,50))
-			),
-			ImageVariant(
-				renderNotificationPreV9,
-				ResourceQualifiers.empty,
-				Seq((19,19), (25,25), (38,38), (50,50))
-			)
-		)
+		case ImageKind.Notification =>
+			mapDensities((18, 24, 36, 48)) { size =>
+				ImageVariant(renderNotificationV11(size), ResourceQualifiers(platformVersion=Some(11)))
+			} ++
+			mapDensities(((12,19), (16,25), (24,38), (32,50))) { case (width, height) =>
+				ImageVariant(renderNotificationV9(width, height), ResourceQualifiers(platformVersion=Some(9)))
+			} ++
+			mapDensities(((19,1), (25,2), (38,3), (50,4))) { case (size, frame) =>
+				ImageVariant(renderNotificationPreV9(size, frame))
+			}
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_launcher.html#size
-		case ImageKind.Launcher => Seq(ImageVariant(
-			svg.render, ResourceQualifiers.empty, Seq((36,36), (48,48), (72,72), (96,96))
-		))
+		case ImageKind.Launcher => mapDensities((36, 48, 72, 96)) { size =>
+			ImageVariant(simpleRender(size, size))
+		}
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_list.html
-		case ImageKind.ListView => Seq(ImageVariant(
-			svg.render, ResourceQualifiers.empty, Seq((24,24), (32,32), (48,48), (64,64))
-		))
+		case ImageKind.ListView => mapDensities((24, 32, 48, 64)) { size =>
+			ImageVariant(simpleRender(size, size))
+		}
 
-		case ImageKind.Tab => Seq(
-			ImageVariant(
-				renderTabV5Unselected, ResourceQualifiers(platformVersion=Some(5)), Seq((24,24), (32,32), (48,48), (64,64)),
-				nameSuffix=Some("unselected")
-			),
-			ImageVariant(
-				renderTabV5Selected, ResourceQualifiers(platformVersion=Some(5)), Seq((24,24), (32,32), (48,48), (64,64)),
-				nameSuffix=Some("selected")
-			),
-			ImageVariant(
-				svg.render, ResourceQualifiers.empty, Seq((24,24), (32,32), (48,48), (64,64))
-			)
-		)
+		case ImageKind.Tab => flatMapDensities(((24,1), (32,2), (48,3), (64,4))) { case (size, padding) => Seq(
+			ImageVariant(renderTabV5Unselected(size, padding), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("unselected")),
+			ImageVariant(renderTabV5Selected(size, padding), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("selected")),
+			ImageVariant(simpleRender(size, size))
+		)}
 
-		case ImageKind.NinePatch => Seq(ImageVariant(
-			renderNinePatch, ResourceQualifiers.empty, Seq((24,24), (32,32), (48,48), (64,64))
-		))
+		case ImageKind.NinePatch => mapDensities((24, 32, 48, 64)) { size =>
+			ImageVariant(renderNinePatch(size, size))
+		}
 	}
 
 	def convert(kind: ImageKind.Value, sourceFile: File, resourcesDirectory: File, baseQualifiers: ResourceQualifiers) {
@@ -100,18 +118,13 @@ object core {
 
 		val variants = getImageVariants(kind)
 		if (logger.isDebugEnabled)
-			logger.debug("Variants: {}", variants.map(v => "%s: %s" format (v.qualifiers, v.sizes)).mkString(", "))
+			logger.debug("Variants: {}", variants)
 
 		// Load SVG document.
 		val svgDocument = svg.load(sourceFile)
 
-		for (
-			variant <- variants;
-			(density, (width, height)) <- DENSITIES zip variant.sizes
-		) {
-			val qualifiers = baseQualifiers.update(variant.qualifiers).copy(screenPixelDensity = Some(density))
-
-			val drawableDirectory = new File(resourcesDirectory, "drawable-%s" format qualifiers)
+		for (variant <- variants) {
+			val drawableDirectory = new File(resourcesDirectory, "drawable-%s" format variant.qualifiers)
 			if (!drawableDirectory.exists) {
 				logger.debug("Create '{}' resources directory", drawableDirectory.getName)
 				drawableDirectory.mkdir()
@@ -120,12 +133,16 @@ object core {
 			val suffix = variant.nameSuffix.map("_" + _).getOrElse("")
 			val targetFile = new File(drawableDirectory, "%s%s.png" format (baseName, suffix))
 
-			logger.info("Render {} to {} with size {}x{}", array(sourceFile.getPath, targetFile, width, height))
-			val image = variant.renderer(svgDocument, width, height)
+			logger.info("Render {} to {}", sourceFile.getPath, targetFile)
+			val image = variant.renderer(svgDocument)
 			val output = new FileOutputStream(targetFile)
 
 			svg.savePng(image, output)
 		}
+	}
+
+	def simpleRender(width: Int, height: Int)(doc: SVGOMDocument): BufferedImage = {
+		svg.render(doc, width, height)
 	}
 
 	/** Render 9-patch image.
@@ -133,7 +150,7 @@ object core {
 	  * 9-patch image format is described at
 	  * http://developer.android.com/guide/topics/graphics/2d-graphics.html#nine-patch
 	  */
-	def renderNinePatch(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
+	def renderNinePatch(width: Int, height: Int)(doc: SVGOMDocument): BufferedImage = {
 		val CONTENT_AREA_ELEMENT_ID = "content-area"
 		val STRETCH_AREA_ELEMENT_ID = "stretch-area"
 
@@ -194,12 +211,10 @@ object core {
 		image
 	}
 
-	def renderTabV5Unselected(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
-		val paddings = Map(24 -> 1, 32 -> 2, 48 -> 3, 64 -> 4)
-		val padding = paddings(width)
-		val iconSize = width - 2*padding
+	def renderTabV5Unselected(size: Int, padding: Int)(doc: SVGOMDocument): BufferedImage = {
+		val iconSize = size - 2*padding
 
-		val asset = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+		val asset = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
 		val gc = asset.createGraphics()
 		gc.setPaint(new Color(0x80,0x80,0x80))
 		gc.fillRect(padding, padding, iconSize, iconSize)
@@ -212,14 +227,12 @@ object core {
 		asset
 	}
 
-	def renderTabV5Selected(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
-		val paddings = Map(24 -> 1, 32 -> 2, 48 -> 3, 64 -> 4)
-		val padding = paddings(width)
-		val iconSize = width - 2*padding
+	def renderTabV5Selected(size: Int, padding: Int)(doc: SVGOMDocument): BufferedImage = {
+		val iconSize = size - 2*padding
 
 		val icon = svg.render(doc, iconSize, iconSize)
 
-		val preGlow = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+		val preGlow = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
 		val ggc = preGlow.createGraphics()
 		ggc.setPaint(new Color(0, 0, 0, 64))
 		ggc.fillRect(padding, padding, iconSize, iconSize)
@@ -227,7 +240,7 @@ object core {
 		ggc.drawImage(icon, null, padding, padding)
 		ggc.dispose()
 
-		val glow = new GaussianFilter(width / 8.0f).filter(preGlow, null)
+		val glow = new GaussianFilter(size / 8.0f).filter(preGlow, null)
 
 		val white = new BufferedImage(iconSize, iconSize, BufferedImage.TYPE_INT_ARGB)
 		val wgc = white.createGraphics()
@@ -237,7 +250,7 @@ object core {
 		wgc.drawImage(icon, null, 0, 0)
 		wgc.dispose()
 
-		val asset = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+		val asset = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
 		val gc = asset.createGraphics()
 		gc.drawImage(glow, null, 0, 0)
 		gc.drawImage(white, null, padding, padding)
@@ -247,16 +260,13 @@ object core {
 	}
 
 	// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html#icon1
-	def renderNotificationPreV9(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
-		assert(width == height)
-
-		val safeframeWidth = (width.toFloat / 12.5).round.toInt
+	def renderNotificationPreV9(size: Int, safeframeWidth: Int)(doc: SVGOMDocument): BufferedImage = {
 		val cornerRadius = safeframeWidth
 		val padding = safeframeWidth
-		val backgroundSize = width - 2*safeframeWidth
+		val backgroundSize = size - 2*safeframeWidth
 		val iconSize = backgroundSize - 2*padding
 
-		val asset = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+		val asset = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
 		val gradient = new GradientPaint(
 			0, safeframeWidth, new Color(105,105,105),
 			0, safeframeWidth+backgroundSize, new Color(10,10,10)
@@ -282,7 +292,7 @@ object core {
 	}
 
 	// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html#style9
-	def renderNotificationV9(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
+	def renderNotificationV9(width: Int, height: Int)(doc: SVGOMDocument): BufferedImage = {
 		// Full asset is rectangular, but icon must be drawn in centered square are.
 		assert(height > width)
 		val yOffset = (height - width) / 2
@@ -301,15 +311,15 @@ object core {
 		asset
 	}
 
-	def renderNotificationV11(doc: SVGOMDocument, width: Int, height: Int): BufferedImage = {
+	def renderNotificationV11(size: Int)(doc: SVGOMDocument): BufferedImage = {
 		// Create image filled with white.
-		val asset = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+		val asset = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
 		val background = Color.white
 		val gc = asset.createGraphics()
 		gc.setPaint(background)
-		gc.fillRect(0, 0, width, height)
+		gc.fillRect(0, 0, size, size)
 
-		val image = svg.render(doc, width, height)
+		val image = svg.render(doc, size, size)
 		gc.setComposite(AlphaComposite.DstIn)
 		gc.drawImage(image, null, 0, 0)
 

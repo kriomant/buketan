@@ -26,9 +26,12 @@ object core {
 
 	val DENSITIES = Seq("ldpi", "mdpi", "hdpi", "xhdpi")
 
-	type Renderer = SVGOMDocument => BufferedImage
+	sealed trait ResourceRenderer
+	case class PngRenderer(apply: SVGOMDocument => BufferedImage) extends ResourceRenderer
+	case class XmlRenderer(apply: String => scala.xml.Elem) extends ResourceRenderer
+
 	case class ImageVariant(
-		renderer: Renderer,
+		renderer: ResourceRenderer,
 		qualifiers: ResourceQualifiers = ResourceQualifiers.empty,
 		nameSuffix: Option[String] = None
 	)
@@ -74,39 +77,38 @@ object core {
 	def getImageVariants(kind: ImageKind.Value): Seq[ImageVariant] = kind match {
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_action_bar.html#size11
 		case ImageKind.ActionBar => mapDensities((18, 24, 36, 48)) { size =>
-			ImageVariant(simpleRender(size, size))
+			ImageVariant(PngRenderer(simpleRender(size, size)))
 		}
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html
 		case ImageKind.Notification =>
 			mapDensities((18, 24, 36, 48)) { size =>
-				ImageVariant(renderNotificationV11(size), ResourceQualifiers(platformVersion=Some(11)))
+				ImageVariant(PngRenderer(renderNotificationV11(size)), ResourceQualifiers(platformVersion=Some(11)))
 			} ++
 			mapDensities(((12,19), (16,25), (24,38), (32,50))) { case (width, height) =>
-				ImageVariant(renderNotificationV9(width, height), ResourceQualifiers(platformVersion=Some(9)))
+				ImageVariant(PngRenderer(renderNotificationV9(width, height)), ResourceQualifiers(platformVersion=Some(9)))
 			} ++
 			mapDensities(((19,1), (25,2), (38,3), (50,4))) { case (size, frame) =>
-				ImageVariant(renderNotificationPreV9(size, frame))
+				ImageVariant(PngRenderer(renderNotificationPreV9(size, frame)))
 			}
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_launcher.html#size
 		case ImageKind.Launcher => mapDensities((36, 48, 72, 96)) { size =>
-			ImageVariant(simpleRender(size, size))
+			ImageVariant(PngRenderer(simpleRender(size, size)))
 		}
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_list.html
 		case ImageKind.ListView => mapDensities((24, 32, 48, 64)) { size =>
-			ImageVariant(simpleRender(size, size))
+			ImageVariant(PngRenderer(simpleRender(size, size)))
 		}
 
 		case ImageKind.Tab => flatMapDensities(((24,1), (32,2), (48,3), (64,4))) { case (size, padding) => Seq(
-			ImageVariant(renderTabV5Unselected(size, padding), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("unselected")),
-			ImageVariant(renderTabV5Selected(size, padding), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("selected")),
-			ImageVariant(simpleRender(size, size))
-		)}
+			ImageVariant(PngRenderer(renderTabV5Unselected(size, padding)), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("unselected")),
+			ImageVariant(PngRenderer(renderTabV5Selected(size, padding)), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("selected"))
+		)} :+ ImageVariant(XmlRenderer(renderTabSelectorResource), ResourceQualifiers(platformVersion=Some(5)))
 
 		case ImageKind.NinePatch => mapDensities((24, 32, 48, 64)) { size =>
-			ImageVariant(renderNinePatch(size, size))
+			ImageVariant(PngRenderer(renderNinePatch(size, size)))
 		}
 	}
 
@@ -131,13 +133,26 @@ object core {
 			}
 
 			val suffix = variant.nameSuffix.map("_" + _).getOrElse("")
-			val targetFile = new File(drawableDirectory, "%s%s.png" format (baseName, suffix))
+			val resourceName = "%s%s" format (baseName, suffix)
 
-			logger.info("Render {} to {}", sourceFile.getPath, targetFile)
-			val image = variant.renderer(svgDocument)
-			val output = new FileOutputStream(targetFile)
+			variant.renderer match {
+				case PngRenderer(render) =>
+					val image = render(svgDocument)
+					val targetFile = new File(drawableDirectory, s"$resourceName.png")
+					logger.info("Render {} to {}", sourceFile.getPath, targetFile)
+					val output = new FileOutputStream(targetFile)
+					try {
+						svg.savePng(image, output)
+					} finally {
+						output.close()
+					}
 
-			svg.savePng(image, output)
+				case XmlRenderer(render) =>
+					val xml = render(resourceName)
+					val targetFile = new File(drawableDirectory, s"$resourceName.xml")
+					logger.info("Render {} to {}", sourceFile.getPath, targetFile)
+					scala.xml.XML.save(targetFile.getAbsolutePath, xml)
+			}
 		}
 	}
 
@@ -209,6 +224,15 @@ object core {
 		gc.dispose()
 
 		image
+	}
+
+	def renderTabSelectorResource(baseName: String): scala.xml.Elem = {
+		<selector xmlns:android="http://schemas.android.com/apk/res/android">
+			<item android:drawable={s"@drawable/${baseName}_selected"}
+			      android:state_selected="true"
+			      android:state_pressed="false" />
+			<item android:drawable={s"@drawable/${baseName}_unselected"} />
+		</selector>
 	}
 
 	def renderTabV5Unselected(size: Int, padding: Int)(doc: SVGOMDocument): BufferedImage = {

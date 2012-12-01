@@ -25,18 +25,6 @@ class svgTest extends FunSpec {
 //	}
 
 	describe("svg.getTransformation") {
-		/** Get affine transformation which maps `from` rectangle to `to` rectangle.
-		  */
-		def rectToRectTransformation(from: Rectangle2D, to: Rectangle2D): AffineTransform = {
-			val tr = new AffineTransform
-
-			tr.preConcatenate(AffineTransform.getTranslateInstance(-from.getX, -from.getY))
-			tr.preConcatenate(AffineTransform.getScaleInstance(to.getWidth/from.getWidth, to.getHeight/from.getHeight))
-			tr.preConcatenate(AffineTransform.getTranslateInstance(to.getX, to.getY))
-
-			tr
-		}
-
 		def getTransformation(xml: String, width: Int, height: Int): AffineTransform = {
 			val doc = svg.loadFromString(xml)
 			val (ctx, _) = svg.prepareRendering(doc, createGvtMapping = false)
@@ -51,7 +39,7 @@ class svgTest extends FunSpec {
 			          """.stripMargin
 			assert(
 				getTransformation(xml, 100, 100)
-				=== rectToRectTransformation(new Rectangle2D.Float(50,0,50,50), new Rectangle2D.Float(0,0,100,100))
+				=== svg.rectToRectTransformation(new Rectangle2D.Float(50,0,50,50), new Rectangle2D.Float(0,0,100,100))
 			)
 		}
 
@@ -63,7 +51,7 @@ class svgTest extends FunSpec {
 			          """.stripMargin
 			assert(
 				getTransformation(xml, 100, 100)
-				=== rectToRectTransformation(new Rectangle2D.Float(0,0,50,50), new Rectangle2D.Float(0,0,100,100))
+				=== svg.rectToRectTransformation(new Rectangle2D.Float(0,0,50,50), new Rectangle2D.Float(0,0,100,100))
 			)
 		}
 	}

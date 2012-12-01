@@ -4,11 +4,13 @@ import java.io.File
 import org.slf4j.LoggerFactory
 import net.elehack.argparse4s.{ExecutionContext, Subcommand, MasterCommand}
 import net.sourceforge.argparse4j.inf.ArgumentParserException
+import net.kriomant.android_svg_res.core.ResourceIntent
+import org.apache.batik.dom.svg.SVGOMDocument
 
 object cmdline {
 	val logger = LoggerFactory.getLogger(getClass)
 
-	class FixedSizeResourceSubcommand(val name: String, val kind: core.ImageKind.Value) extends Subcommand {
+	trait GenerateResourcesSubcommand extends Subcommand {
 		val file = argument[File]("svg-file")
 		val resourcesDirectory = argument[File]("resources-directory").metavar("PATH")
 
@@ -17,9 +19,20 @@ object cmdline {
 			.metavar("RESOURCE-QUALIFIERS")
 			.help("additional resource qualifiers")
 
+		def generator: SVGOMDocument => Seq[ResourceIntent]
+
 		def run()(implicit exc: ExecutionContext) {
-			core.convert(kind, file.get, resourcesDirectory.get, ResourceQualifiers.parse(qualifiers.get))
+			core.convert(generator, file.get, resourcesDirectory.get, ResourceQualifiers.parse(qualifiers.get))
 		}
+	}
+
+	class FixedSizeResourceSubcommand(val name: String, val kind: core.ImageKind.Value) extends GenerateResourcesSubcommand {
+		def generator = core.generateFixedSizedResources(kind)
+	}
+
+	object ninePatchSubcommand extends GenerateResourcesSubcommand {
+		val name = "9-patch"
+		def generator = core.generateNinePatchResources
 	}
 
 	object Command extends MasterCommand {
@@ -32,9 +45,11 @@ object cmdline {
 			}
 		}
 
-		def subcommands: Seq[Subcommand] = core.ImageKind.values.toSeq.map { kind =>
-			new FixedSizeResourceSubcommand(kind.toString, kind)
-		}
+		def subcommands: Seq[Subcommand] =
+			core.ImageKind.values.toSeq.map { kind => new FixedSizeResourceSubcommand(kind.toString, kind) } ++
+			Seq(
+				ninePatchSubcommand
+			)
 	}
 
 	def main(args: Array[String]) {

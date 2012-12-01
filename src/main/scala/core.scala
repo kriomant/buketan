@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.apache.batik.gvt.GraphicsNode
 import java.awt.geom.{AffineTransform, Rectangle2D}
 import java.awt.{GradientPaint, AlphaComposite, Color}
+import org.apache.batik.bridge.BridgeContext
 import com.jhlabs.image.GaussianFilter
 
 object core {
@@ -21,7 +22,6 @@ object core {
 		val Launcher = Value("launcher")
 		val ListView = Value("list-view")
 		val Tab = Value("tab")
-		val NinePatch = Value("9-patch")
 	}
 
 	val DENSITIES = Seq("ldpi", "mdpi", "hdpi", "xhdpi")
@@ -30,100 +30,145 @@ object core {
 	case class PngRenderer(apply: SVGOMDocument => BufferedImage) extends ResourceRenderer
 	case class XmlRenderer(apply: String => scala.xml.Elem) extends ResourceRenderer
 
-	case class ImageVariant(
+	case class ResourceIntent(
 		renderer: ResourceRenderer,
 		qualifiers: ResourceQualifiers = ResourceQualifiers.empty,
 		nameSuffix: Option[String] = None
 	)
 
-	/** Creates [[net.kriomant.android_svg_res.core.ImageVariant]] for each screen density value.
+	/** Creates [[net.kriomant.android_svg_res.core.ResourceIntent]] for each screen density value.
 	  *
 	  * Feeds `values` one by one to `f` function and modify `qualifiers` field
-	  * in returned `ImageVariant` to have corresponding `screenPixelDensity`.
+	  * in returned `ResourceIntent` to have corresponding `screenPixelDensity`.
 	  *
 		* @param values Arbitrary values for ldpi, mdpi, hdpi and xhdpi densities
 	  *               (in that order) for passing to creation function `f`
-	  * @param f Function which received one value from `values` and returns `ImageVariant`
+	  * @param f Function which received one value from `values` and returns `ResourceIntent`
 	  * @tparam T Type of data passed to `f`
-	  * @return Sequence of created `ImageVariant`s
+	  * @return Sequence of created `ResourceIntent`s
 	  */
-	def mapDensities[T](values: (T, T, T, T))(f: T => ImageVariant): Seq[ImageVariant] = {
+	def mapDensities[T](values: (T, T, T, T))(f: T => ResourceIntent): Seq[ResourceIntent] = {
 		(values.productIterator.toSeq zip DENSITIES) map { case (value, density) =>
 			val variant = f(value.asInstanceOf[T])
 			variant.copy(qualifiers = variant.qualifiers.copy(screenPixelDensity=Some(density)))
 		}
 	}
 
-	/** Creates [[net.kriomant.android_svg_res.core.ImageVariant]] for each screen density value.
+	/** Creates [[net.kriomant.android_svg_res.core.ResourceIntent]] for each screen density value.
 	  *
 	  * Feeds `values` one by one to `f` function and modify `qualifiers` field
-	  * in returned `ImageVariant`s to have corresponding `screenPixelDensity`.
+	  * in returned `ResourceIntent`s to have corresponding `screenPixelDensity`.
 	  *
 	  * @param values Arbitrary values for ldpi, mdpi, hdpi and xhdpi densities
 	  *               (in that order) for passing to creation function `f`
-	  * @param f Function which received one value from `values` and returns `ImageVariant` sequence
+	  * @param f Function which received one value from `values` and returns `ResourceIntent` sequence
 	  * @tparam T Type of data passed to `f`
-	  * @return Sequence of created `ImageVariant`s
+	  * @return Sequence of created `ResourceIntent`s
 	  */
-	def flatMapDensities[T](values: (T, T, T, T))(f: T => Seq[ImageVariant]): Seq[ImageVariant] = {
+	def flatMapDensities[T](values: (T, T, T, T))(f: T => Seq[ResourceIntent]): Seq[ResourceIntent] = {
 		(values.productIterator.toSeq zip DENSITIES) flatMap { case (value, density) =>
 			val variants = f(value.asInstanceOf[T])
 			variants map (v => v.copy(qualifiers = v.qualifiers.copy(screenPixelDensity=Some(density))))
 		}
 	}
 
-	/** Get image sizes for given image kind for ldpi, mdpi, hdpi, xhdpi densities.
-	  */
-	def getImageVariants(kind: ImageKind.Value): Seq[ImageVariant] = kind match {
+	def generateFixedSizedResources(kind: ImageKind.Value)(doc: SVGOMDocument): Seq[ResourceIntent] = kind match {
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_action_bar.html#size11
 		case ImageKind.ActionBar => mapDensities((18, 24, 36, 48)) { size =>
-			ImageVariant(PngRenderer(simpleRender(size, size)))
+			ResourceIntent(PngRenderer(simpleRender(size, size)))
 		}
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html
 		case ImageKind.Notification =>
 			mapDensities((18, 24, 36, 48)) { size =>
-				ImageVariant(PngRenderer(renderNotificationV11(size)), ResourceQualifiers(platformVersion=Some(11)))
+				ResourceIntent(PngRenderer(renderNotificationV11(size)), ResourceQualifiers(platformVersion=Some(11)))
 			} ++
 			mapDensities(((12,19), (16,25), (24,38), (32,50))) { case (width, height) =>
-				ImageVariant(PngRenderer(renderNotificationV9(width, height)), ResourceQualifiers(platformVersion=Some(9)))
+				ResourceIntent(PngRenderer(renderNotificationV9(width, height)), ResourceQualifiers(platformVersion=Some(9)))
 			} ++
 			mapDensities(((19,1), (25,2), (38,3), (50,4))) { case (size, frame) =>
-				ImageVariant(PngRenderer(renderNotificationPreV9(size, frame)))
+				ResourceIntent(PngRenderer(renderNotificationPreV9(size, frame)))
 			}
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_launcher.html#size
 		case ImageKind.Launcher => mapDensities((36, 48, 72, 96)) { size =>
-			ImageVariant(PngRenderer(simpleRender(size, size)))
+			ResourceIntent(PngRenderer(simpleRender(size, size)))
 		}
 
 		// http://developer.android.com/guide/practices/ui_guidelines/icon_design_list.html
 		case ImageKind.ListView => mapDensities((24, 32, 48, 64)) { size =>
-			ImageVariant(PngRenderer(simpleRender(size, size)))
+			ResourceIntent(PngRenderer(simpleRender(size, size)))
 		}
 
 		case ImageKind.Tab => flatMapDensities(((24,1), (32,2), (48,3), (64,4))) { case (size, padding) => Seq(
-			ImageVariant(PngRenderer(renderTabV5Unselected(size, padding)), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("unselected")),
-			ImageVariant(PngRenderer(renderTabV5Selected(size, padding)), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("selected"))
-		)} :+ ImageVariant(XmlRenderer(renderTabSelectorResource), ResourceQualifiers(platformVersion=Some(5)))
+			ResourceIntent(PngRenderer(renderTabV5Unselected(size, padding)), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("unselected")),
+			ResourceIntent(PngRenderer(renderTabV5Selected(size, padding)), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("selected"))
+		)} :+ ResourceIntent(XmlRenderer(renderTabSelectorResource), ResourceQualifiers(platformVersion=Some(5)))
+	}
 
-		case ImageKind.NinePatch => mapDensities((24, 32, 48, 64)) { size =>
-			ImageVariant(PngRenderer(renderNinePatch(size, size)))
+	def generateNinePatchResources(doc: SVGOMDocument): Seq[ResourceIntent] = {
+		val (ctx, gvt) = svg.prepareRendering(doc, createGvtMapping = true)
+
+		val aoi = svg.getAreaOfInterest(ctx)
+		logger.debug("Area of interest: {}", aoi)
+
+		val CONTENT_AREA_ELEMENT_ID = "content-area"
+		val STRETCH_AREA_ELEMENT_ID = "stretch-area"
+
+		val contentAreaElement = Option(doc.getElementById(CONTENT_AREA_ELEMENT_ID))
+		contentAreaElement.foreach { e =>
+			if (e.getTagName != "rect")
+				throw new Exception("Content area (element with ID '%s') must be rectangle" format CONTENT_AREA_ELEMENT_ID)
+		}
+
+		val stretchAreaElement = doc.getElementById(STRETCH_AREA_ELEMENT_ID)
+		if (stretchAreaElement == null)
+			throw new Exception("9-patch SVG document must contain rectangle with ID '%s'" format STRETCH_AREA_ELEMENT_ID)
+		if (stretchAreaElement.getTagName != "rect")
+			throw new Exception("Stretch area (element with ID '%s') must be rectangle" format STRETCH_AREA_ELEMENT_ID)
+
+		// Get graphics node bounds in user coordinate system.
+		def getBounds(gn: GraphicsNode): Rectangle2D = {
+			// This is bounds in coordinate system of graphics node.
+			val bounds = gn.getBounds
+			gn.getGlobalTransform.createTransformedShape(bounds).getBounds2D
+		}
+
+		val stretchGraphicsNode = ctx.getGraphicsNode(stretchAreaElement)
+		val stretchArea = getBounds(stretchGraphicsNode)
+		logger.debug("Stretch area: {}", stretchArea)
+
+		val contentGraphicsNode = contentAreaElement.map(ctx.getGraphicsNode(_))
+		val contentArea = contentGraphicsNode.map(getBounds)
+		logger.debug("Content area: {}", contentArea)
+
+		// Hide *-area elements.
+		contentGraphicsNode.foreach { n => n.setVisible(false) }
+		stretchGraphicsNode.setVisible(false)
+
+		// Use intrinsic document size for 'mdpi' density, scale image for
+		// other densities accordingly.
+		mapDensities((0.75, 1.0, 1.5, 2.0)) { scale =>
+			val width = (aoi.width * scale).toInt
+			val height = (aoi.height * scale).toInt
+			ResourceIntent(PngRenderer(
+				renderNinePatch(width, height, ctx, gvt, aoi, stretchArea, contentArea)
+			))
 		}
 	}
 
-	def convert(kind: ImageKind.Value, sourceFile: File, resourcesDirectory: File, baseQualifiers: ResourceQualifiers) {
+	def convert(generator: SVGOMDocument => Seq[ResourceIntent], sourceFile: File, resourcesDirectory: File, baseQualifiers: ResourceQualifiers) {
 		val fileName = sourceFile.getName
 		if (! (fileName endsWith ".svg"))
 			throw new IllegalArgumentException("Source file must have .SVG extension")
 		val baseName = fileName.dropRight(4)
 
-		val variants = getImageVariants(kind)
-		if (logger.isDebugEnabled)
-			logger.debug("Variants: {}", variants)
-
 		// Load SVG document.
 		val svgDocument = svg.load(sourceFile)
+
+		val variants = generator(svgDocument)
+		if (logger.isDebugEnabled)
+			logger.debug("Variants: {}", variants)
 
 		for (variant <- variants) {
 			val drawableDirectory = new File(resourcesDirectory, "drawable-%s" format variant.qualifiers)
@@ -165,41 +210,12 @@ object core {
 	  * 9-patch image format is described at
 	  * http://developer.android.com/guide/topics/graphics/2d-graphics.html#nine-patch
 	  */
-	def renderNinePatch(width: Int, height: Int)(doc: SVGOMDocument): BufferedImage = {
-		val CONTENT_AREA_ELEMENT_ID = "content-area"
-		val STRETCH_AREA_ELEMENT_ID = "stretch-area"
-
-		val contentAreaElement = Option(doc.getElementById(CONTENT_AREA_ELEMENT_ID))
-		if (! contentAreaElement.map(_.getTagName == "rect").getOrElse(true))
-			throw new Exception("Content area (element with ID '%s') must be rectangle" format CONTENT_AREA_ELEMENT_ID)
-
-		val stretchAreaElement = doc.getElementById(STRETCH_AREA_ELEMENT_ID)
-		if (stretchAreaElement == null)
-			throw new Exception("9-patch SVG document must contain rectangle with ID '%s'" format STRETCH_AREA_ELEMENT_ID)
-		if (stretchAreaElement.getTagName != "rect")
-			throw new Exception("Stretch area (element with ID '%s') must be rectangle" format STRETCH_AREA_ELEMENT_ID)
-
-		// Create SVG content and GVT element. Tell context to maintain mapping between
-		// source XML nodes and graphic elements.
-		val (ctx, gvtRoot) = svg.prepareRendering(doc, createGvtMapping = true)
-		val transformation = svg.getTransformation(ctx, width, height)
-
-		def getBounds(gn: GraphicsNode): Rectangle2D = {
-			val bounds = gn.getBounds
-			val tr = new AffineTransform(gn.getGlobalTransform)
-			tr.preConcatenate(transformation)
-			tr.createTransformedShape(bounds).getBounds2D
-		}
-
-		val contentGraphicsNode = contentAreaElement.map(ctx.getGraphicsNode(_))
-		val contentArea = contentGraphicsNode.map(getBounds)
-
-		val stretchGraphicsNode = ctx.getGraphicsNode(stretchAreaElement)
-		val stretchArea = getBounds(stretchGraphicsNode)
-
-		// Hide *-area elements.
-		contentGraphicsNode.foreach { n => n.setVisible(false) }
-		stretchGraphicsNode.setVisible(false)
+	def renderNinePatch(
+		width: Int, height: Int,
+		ctx: BridgeContext, gvtRoot: GraphicsNode,
+		aoi: Rectangle2D.Float, stretchArea: Rectangle2D, contentArea: Option[Rectangle2D]
+	)(doc: SVGOMDocument): BufferedImage = {
+		val transformation = svg.rectToRectTransformation(aoi, new Rectangle2D.Float(0, 0, width, height))
 
 		val icon = svg.render(ctx, gvtRoot, width, height)
 
@@ -209,16 +225,18 @@ object core {
 
 		gc.setPaint(Color.black)
 
-		// Stretch area.
-		logger.trace("Stretch area: {}", stretchArea)
-		gc.drawLine(stretchArea.getMinX.toInt+1, 0, stretchArea.getMaxX.toInt+1, 0)
-		gc.drawLine(0, stretchArea.getMinY.toInt+1, 0, stretchArea.getMaxY.toInt+1)
+		// Transformed stretch area.
+		val tsa = transformation.createTransformedShape(stretchArea).getBounds
+		logger.trace("Stretch area: {}", tsa)
+		gc.drawLine(tsa.x+1, 0, tsa.x+tsa.width+1, 0)
+		gc.drawLine(0, tsa.y+1, 0, tsa.y+tsa.height+1)
 
-		// Content area.
+		// Transformed content area.
 		contentArea.foreach { area =>
-			logger.trace("Content area: {}", area)
-			gc.drawLine(area.getMinX.toInt+1, height+1, area.getMaxX.toInt+1, height+1)
-			gc.drawLine(width+1, area.getMinY.toInt+1, width+1, area.getMaxY.toInt+1)
+			val tca = transformation.createTransformedShape(area).getBounds
+			logger.trace("Content area: {}", tca)
+			gc.drawLine(tca.x+1, height+1, tca.x+tca.width+1, height+1)
+			gc.drawLine(width+1, tca.y+1, width+1, tca.y+tca.height+1)
 		}
 
 		gc.dispose()

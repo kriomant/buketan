@@ -10,7 +10,7 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="32"
-   height="32"
+   height="24"
    id="svg2"
    version="1.1"
    inkscape:version="0.48.3.1 r9886"
@@ -28,8 +28,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="19.883843"
-     inkscape:cx="10.458641"
-     inkscape:cy="22.070875"
+     inkscape:cx="15.538142"
+     inkscape:cy="17.282468"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="false"
@@ -56,7 +56,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -64,17 +64,17 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-1020.3622)"
+     transform="translate(0,-1028.3622)"
      style="display:inline">
     <rect
        style="opacity:0.9;fill:#b3b3b3;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        id="rect2985"
-       width="30.906147"
-       height="11.347371"
-       x="0.33947161"
-       y="1020.8148"
-       rx="5"
-       ry="5"
+       width="31.799999"
+       height="11.8"
+       x="0.1"
+       y="1028.4622"
+       rx="4"
+       ry="4.0000005"
        inkscape:export-filename="/home/kriomant/Dropbox/Projects/gortrans/android-app/src/main/res/drawable/map_vehicle_popup.png"
        inkscape:export-xdpi="189.41153"
        inkscape:export-ydpi="189.41153" />
@@ -83,34 +83,33 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="android-svg-res"
-     transform="translate(0,-1020.3622)"
+     transform="translate(0,-1028.3622)"
      style="display:inline">
-    <rect
-       style="opacity:0.8;fill:#00ffff;fill-opacity:1;stroke:none"
-       id="stretch-area"
-       width="24.423624"
-       height="8.0293293"
-       x="3.4213254"
-       y="1022.0991"
-       rx="2.1094237e-15"
-       ry="2.1094237e-15"
-       inkscape:label="#rect4136">
-      <title
-         id="title4138">stretch-area</title>
-    </rect>
     <rect
        style="opacity:0.8;fill:#ec0000;fill-opacity:1;stroke:none"
        id="content-area"
-       width="22.403982"
-       height="5.6187768"
-       x="4.4807968"
-       y="2.8392603"
-       transform="translate(0,1020.3622)"
+       width="28"
+       height="8"
+       x="2"
+       y="1030.3622"
        rx="2.1094237e-15"
        ry="2.1094237e-15"
        inkscape:label="#rect3364">
       <title
          id="title4134">content-area</title>
+    </rect>
+    <rect
+       style="opacity:0.8;fill:#00ffff;fill-opacity:1;stroke:none"
+       id="stretch-area"
+       width="24"
+       height="4"
+       x="4"
+       y="1032.3622"
+       rx="2.1094237e-15"
+       ry="2.1094237e-15"
+       inkscape:label="#rect4136">
+      <title
+         id="title4138">stretch-area</title>
     </rect>
   </g>
 </svg>

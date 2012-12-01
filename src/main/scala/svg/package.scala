@@ -10,10 +10,11 @@ import org.apache.batik.ext.awt.image.codec.png.{PNGImageEncoder, PNGEncodeParam
 import org.apache.batik.bridge.{ViewBox, BridgeContext, GVTBuilder, UserAgentAdapter}
 import org.apache.batik.gvt.GraphicsNode
 import org.apache.batik.bridge.svg12.SVG12BridgeContext
-import java.awt.geom.AffineTransform
+import java.awt.geom.{Rectangle2D, AffineTransform}
 import org.apache.batik.ext.awt.image.GraphicsUtil
 import org.slf4j.LoggerFactory
 import utils.array
+import org.apache.batik.parser.{PreserveAspectRatioHandler, PreserveAspectRatioParser}
 
 package object svg {
 	val logger = LoggerFactory.getLogger(getClass)
@@ -51,6 +52,24 @@ package object svg {
 		val image = render(ctx, gvtRoot, width, height)
 		ctx.dispose()
 		image
+	}
+
+	def getAreaOfInterest(ctx: BridgeContext): Rectangle2D.Float = {
+		val doc = ctx.getDocument.asInstanceOf[SVGOMDocument]
+		val root = doc.getRootElement
+		root.getAttributeNS(null, SVGConstants.SVG_VIEW_BOX_ATTRIBUTE) match {
+			case null | "" =>
+				val docWidth: Float = ctx.getDocumentSize.getWidth.asInstanceOf[Float]
+				val docHeight: Float = ctx.getDocumentSize.getHeight.asInstanceOf[Float]
+				logger.debug("Use document dimensions: {}x{}", docWidth, docHeight)
+				new Rectangle2D.Float(0, 0, docWidth, docHeight)
+
+			case viewBoxAttr =>
+				val aspectRatioAttr = root.getAttributeNS(null, SVGConstants.SVG_PRESERVE_ASPECT_RATIO_ATTRIBUTE)
+				logger.info("Use viewBox '{}' and aspectRationAttr '{}'", viewBoxAttr, aspectRatioAttr)
+				val p = ViewBox.parseViewBoxAttribute(root, viewBoxAttr, ctx)
+				new Rectangle2D.Float(p(0), p(1), p(2), p(3))
+		}
 	}
 
 	def getTransformation(ctx: BridgeContext, width: Int, height: Int): AffineTransform = {
@@ -97,4 +116,17 @@ package object svg {
 		val pngEncoder = new PNGImageEncoder(stream, params)
 		pngEncoder.encode(image)
 	}
+
+	/** Get affine transformation which maps `from` rectangle to `to` rectangle.
+	  */
+	def rectToRectTransformation(from: Rectangle2D, to: Rectangle2D): AffineTransform = {
+		val tr = new AffineTransform
+
+		tr.preConcatenate(AffineTransform.getTranslateInstance(-from.getX, -from.getY))
+		tr.preConcatenate(AffineTransform.getScaleInstance(to.getWidth/from.getWidth, to.getHeight/from.getHeight))
+		tr.preConcatenate(AffineTransform.getTranslateInstance(to.getX, to.getY))
+
+		tr
+	}
+
 }

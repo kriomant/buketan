@@ -225,18 +225,21 @@ object core {
 
 		gc.setPaint(Color.black)
 
+		// Drawing rectangle of width 3 will produce 4 pixels, so it
+		// it needed to decrease width and height by 1 during rendering.
+
 		// Transformed stretch area.
 		val tsa = transformation.createTransformedShape(stretchArea).getBounds
 		logger.trace("Stretch area: {}", tsa)
-		gc.drawLine(tsa.x+1, 0, tsa.x+tsa.width+1, 0)
-		gc.drawLine(0, tsa.y+1, 0, tsa.y+tsa.height+1)
+		gc.drawLine(tsa.x+1, 0, tsa.x+tsa.width, 0)
+		gc.drawLine(0, tsa.y+1, 0, tsa.y+tsa.height)
 
 		// Transformed content area.
 		contentArea.foreach { area =>
 			val tca = transformation.createTransformedShape(area).getBounds
 			logger.trace("Content area: {}", tca)
-			gc.drawLine(tca.x+1, height+1, tca.x+tca.width+1, height+1)
-			gc.drawLine(width+1, tca.y+1, width+1, tca.y+tca.height+1)
+			gc.drawLine(tca.x+1, height+1, tca.x+tca.width, height+1)
+			gc.drawLine(width+1, tca.y+1, width+1, tca.y+tca.height)
 		}
 
 		gc.dispose()

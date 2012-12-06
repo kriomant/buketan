@@ -1,4 +1,4 @@
-package net.kriomant.android_svg_res
+package net.kriomant.buketan
 
 import util.parsing.combinator.RegexParsers
 

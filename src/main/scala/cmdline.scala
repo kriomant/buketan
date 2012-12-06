@@ -1,10 +1,10 @@
-package net.kriomant.android_svg_res
+package net.kriomant.buketan
 
 import java.io.File
 import org.slf4j.LoggerFactory
 import net.elehack.argparse4s.{ExecutionContext, Subcommand, MasterCommand}
 import net.sourceforge.argparse4j.inf.ArgumentParserException
-import net.kriomant.android_svg_res.core.ResourceIntent
+import net.kriomant.buketan.core.ResourceIntent
 import org.apache.batik.dom.svg.SVGOMDocument
 
 object cmdline {
@@ -52,7 +52,7 @@ object cmdline {
 	}
 
 	object Command extends MasterCommand {
-		val name: String = "android-svg-res"
+		val name: String = "buketan"
 
 		def run()(implicit exc: ExecutionContext) {
 			subcommand match {

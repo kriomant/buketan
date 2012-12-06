@@ -1,7 +1,7 @@
-package net.kriomant.android_svg_res
+package net.kriomant.buketan
 
 import org.scalatest.FunSpec
-import net.kriomant.android_svg_res.core.{ResourceIntent, mapDensities, flatMapDensities}
+import net.kriomant.buketan.core.{ResourceIntent, mapDensities, flatMapDensities}
 import org.apache.batik.svggen.SVGGraphics2D
 import java.awt.{Color, Dimension}
 import org.apache.batik.dom.svg.{SVGDOMImplementation, SVGOMDocument}

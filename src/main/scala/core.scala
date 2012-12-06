@@ -1,4 +1,4 @@
-package net.kriomant.android_svg_res
+package net.kriomant.buketan
 
 import org.apache.batik.dom.svg.SVGOMDocument
 import java.awt.image.BufferedImage
@@ -37,7 +37,7 @@ object core {
 		nameSuffix: Option[String] = None
 	)
 
-	/** Creates [[net.kriomant.android_svg_res.core.ResourceIntent]] for each screen density value.
+	/** Creates [[net.kriomant.buketan.core.ResourceIntent]] for each screen density value.
 	  *
 	  * Feeds `values` one by one to `f` function and modify `qualifiers` field
 	  * in returned `ResourceIntent` to have corresponding `screenPixelDensity`.
@@ -55,7 +55,7 @@ object core {
 		}
 	}
 
-	/** Creates [[net.kriomant.android_svg_res.core.ResourceIntent]] for each screen density value.
+	/** Creates [[net.kriomant.buketan.core.ResourceIntent]] for each screen density value.
 	  *
 	  * Feeds `values` one by one to `f` function and modify `qualifiers` field
 	  * in returned `ResourceIntent`s to have corresponding `screenPixelDensity`.

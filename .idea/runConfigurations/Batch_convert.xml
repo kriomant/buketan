@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Batch convert" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="net.kriomant.android_svg_res.cmdline" />
+    <option name="MAIN_CLASS_NAME" value="net.kriomant.buketan.cmdline" />
     <option name="VM_PARAMETERS" value="" />
     <option name="PROGRAM_PARAMETERS" value="batch svgs resources" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -9,7 +9,7 @@
     <option name="ENABLE_SWING_INSPECTOR" value="false" />
     <option name="ENV_VARIABLES" />
     <option name="PASS_PARENT_ENVS" value="true" />
-    <module name="android-svg-res" />
+    <module name="buketan" />
     <envs />
     <RunnerSettings RunnerId="Debug">
       <option name="DEBUG_PORT" value="" />

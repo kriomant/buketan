@@ -2,13 +2,14 @@ package net.kriomant.android_svg_res
 
 import org.apache.batik.dom.svg.SVGOMDocument
 import java.awt.image.BufferedImage
-import java.io.{FileOutputStream, File}
+import java.io.{FilenameFilter, FileOutputStream, File}
 import org.slf4j.LoggerFactory
 import org.apache.batik.gvt.GraphicsNode
 import java.awt.geom.{AffineTransform, Rectangle2D}
 import java.awt.{GradientPaint, AlphaComposite, Color}
 import org.apache.batik.bridge.BridgeContext
 import com.jhlabs.image.GaussianFilter
+import util.parsing.combinator.RegexParsers
 
 object core {
 
@@ -166,6 +167,10 @@ object core {
 		// Load SVG document.
 		val svgDocument = svg.load(sourceFile)
 
+		convert(generator, svgDocument, baseName, resourcesDirectory, baseQualifiers)
+	}
+
+	def convert(generator: SVGOMDocument => Seq[ResourceIntent], svgDocument: SVGOMDocument, baseName: String, resourcesDirectory: File, baseQualifiers: ResourceQualifiers) {
 		val variants = generator(svgDocument)
 		if (logger.isDebugEnabled)
 			logger.debug("Variants: {}", variants)
@@ -184,7 +189,7 @@ object core {
 				case PngRenderer(render) =>
 					val image = render(svgDocument)
 					val targetFile = new File(drawableDirectory, s"$resourceName.png")
-					logger.info("Render {} to {}", sourceFile.getPath, targetFile)
+					logger.info("Render {} to {}", baseName, targetFile)
 					val output = new FileOutputStream(targetFile)
 					try {
 						svg.savePng(image, output)
@@ -195,8 +200,47 @@ object core {
 				case XmlRenderer(render) =>
 					val xml = render(resourceName)
 					val targetFile = new File(drawableDirectory, s"$resourceName.xml")
-					logger.info("Render {} to {}", sourceFile.getPath, targetFile)
+					logger.info("Render {} to {}", baseName, targetFile)
 					scala.xml.XML.save(targetFile.getAbsolutePath, xml)
+			}
+		}
+	}
+
+	case class BatchItem(baseName: String, action: String, qualifiers: Option[ResourceQualifiers])
+
+	object fileNameParser extends RegexParsers {
+		val baseName = """(?i)\w+""".r
+		val action = """[\w\d-]+""".r
+		val qualifiers = """(?i)[\w\d-]+""".r ^^ ResourceQualifiers.parse
+		val directives = action ~ opt("," ~> qualifiers)
+		val fileName = (baseName ~ ("." ~> directives) <~ ".svg") ^^ { case n~(a~q) => BatchItem(n, a, q) }
+
+		def parse(s: String): BatchItem = {
+			parseAll(fileName, s) match {
+				case Success(res, _) => res
+				case err: NoSuccess => throw new Exception(s"Invalid file name: ${err.msg}")
+			}
+		}
+	}
+
+	def batch(sourceDirectory: File, resourcesDirectory: File, baseQualifiers: ResourceQualifiers) {
+		object svgFileFilter extends FilenameFilter {
+			def accept(dir: File, filename: String): Boolean = filename.endsWith(".svg")
+		}
+		for (sourceFile <- sourceDirectory.listFiles(svgFileFilter)) {
+			val batchItem = fileNameParser.parse(sourceFile.getName)
+			val (generator, baseName) = batchItem.action match {
+				case "9" => (Some(generateNinePatchResources _), batchItem.baseName + ".9")
+				case action => (ImageKind.values.find(_.toString == action).map(generateFixedSizedResources), batchItem.baseName)
+			}
+
+			generator match {
+				case Some(gen) =>
+					val doc = svg.load(sourceFile)
+					val qualifiers = batchItem.qualifiers.map(baseQualifiers.update(_)).getOrElse(baseQualifiers)
+					convert(gen, doc, baseName, resourcesDirectory, qualifiers)
+
+				case None => logger.error("Unknown action '{}' for file '{}'", batchItem.action, sourceFile.getName)
 			}
 		}
 	}

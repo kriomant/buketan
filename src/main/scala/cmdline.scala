@@ -35,6 +35,22 @@ object cmdline {
 		def generator = core.generateNinePatchResources
 	}
 
+	object batchSubcommand extends Subcommand {
+		val name = "batch"
+
+		val sourceDirectory = argument[File]("source-directory")
+		val resourcesDirectory = argument[File]("resources-directory").metavar("PATH")
+
+		val qualifiers = option[String]('q', "resource-qualifiers")
+			.default("")
+			.metavar("RESOURCE-QUALIFIERS")
+			.help("additional resource qualifiers")
+
+		def run()(implicit exc: ExecutionContext) {
+			core.batch(sourceDirectory.get, resourcesDirectory.get, ResourceQualifiers.parse(qualifiers.get))
+		}
+	}
+
 	object Command extends MasterCommand {
 		val name: String = "android-svg-res"
 
@@ -48,7 +64,8 @@ object cmdline {
 		def subcommands: Seq[Subcommand] =
 			core.ImageKind.values.toSeq.map { kind => new FixedSizeResourceSubcommand(kind.toString, kind) } ++
 			Seq(
-				ninePatchSubcommand
+				ninePatchSubcommand,
+				batchSubcommand
 			)
 	}
 

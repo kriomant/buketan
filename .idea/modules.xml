@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/buketan.iml" filepath="$PROJECT_DIR$/buketan.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cmdline/cmdline.iml" filepath="$PROJECT_DIR$/cmdline/cmdline.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/project/project.iml" filepath="$PROJECT_DIR$/project/project.iml" />
     </modules>
   </component>
 </project>

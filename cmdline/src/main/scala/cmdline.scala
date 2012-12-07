@@ -4,8 +4,8 @@ import java.io.File
 import org.slf4j.LoggerFactory
 import net.elehack.argparse4s.{ExecutionContext, Subcommand, MasterCommand}
 import net.sourceforge.argparse4j.inf.ArgumentParserException
-import net.kriomant.buketan.core.ResourceIntent
 import org.apache.batik.dom.svg.SVGOMDocument
+import net.kriomant.buketan.core.ResourceIntent
 
 object cmdline {
 	val logger = LoggerFactory.getLogger(getClass)

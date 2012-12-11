@@ -5,6 +5,7 @@
       <configuration>
         <option name="basePackage" value="com.kriomant.buketan" />
         <option name="fsc" value="true" />
+        <option name="languageLevel" value="Scala 2.9" />
       </configuration>
     </facet>
   </component>
@@ -17,7 +18,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="ch.qos.logback:logback-classic:0.9.30" level="project" />
-    <orderEntry type="library" name="scala-2.10.0-RC2" level="application" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -46,6 +46,15 @@
       </library>
     </orderEntry>
     <orderEntry type="module" module-name="core" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.9.2.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
 

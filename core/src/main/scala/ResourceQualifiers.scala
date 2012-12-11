@@ -126,7 +126,7 @@ object ResourceQualifiers {
 		def parse(s: String): ResourceQualifiers = {
 			parseAll(qualifiers, s) match {
 				case Success(q, _) => q
-				case err: NoSuccess => throw new Exception(s"Invalid resource qualifiers: ${err.msg}")
+				case err: NoSuccess => throw new Exception("Invalid resource qualifiers: %s" format err.msg)
 			}
 		}
 	}

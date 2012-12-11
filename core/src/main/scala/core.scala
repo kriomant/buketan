@@ -170,12 +170,12 @@ object core {
 		convert(generator, svgDocument, baseName, resourcesDirectory, baseQualifiers)
 	}
 
-	def convert(generator: SVGOMDocument => Seq[ResourceIntent], svgDocument: SVGOMDocument, baseName: String, resourcesDirectory: File, baseQualifiers: ResourceQualifiers) {
+	def convert(generator: SVGOMDocument => Seq[ResourceIntent], svgDocument: SVGOMDocument, baseName: String, resourcesDirectory: File, baseQualifiers: ResourceQualifiers): Seq[File] = {
 		val variants = generator(svgDocument)
 		if (logger.isDebugEnabled)
 			logger.debug("Variants: {}", variants)
 
-		for (variant <- variants) {
+		variants.map { variant =>
 			val drawableDirectory = new File(resourcesDirectory, "drawable-%s" format variant.qualifiers)
 			if (!drawableDirectory.exists) {
 				logger.debug("Create '{}' resources directory", drawableDirectory.getName)
@@ -188,7 +188,7 @@ object core {
 			variant.renderer match {
 				case PngRenderer(render) =>
 					val image = render(svgDocument)
-					val targetFile = new File(drawableDirectory, s"$resourceName.png")
+					val targetFile = new File(drawableDirectory, "%s.png" format resourceName)
 					logger.info("Render {} to {}", baseName, targetFile)
 					val output = new FileOutputStream(targetFile)
 					try {
@@ -196,12 +196,14 @@ object core {
 					} finally {
 						output.close()
 					}
+					targetFile
 
 				case XmlRenderer(render) =>
 					val xml = render(resourceName)
-					val targetFile = new File(drawableDirectory, s"$resourceName.xml")
+					val targetFile = new File(drawableDirectory, "%s.xml" format resourceName)
 					logger.info("Render {} to {}", baseName, targetFile)
 					scala.xml.XML.save(targetFile.getAbsolutePath, xml)
+					targetFile
 			}
 		}
 	}
@@ -218,7 +220,7 @@ object core {
 		def parse(s: String): BatchItem = {
 			parseAll(fileName, s) match {
 				case Success(res, _) => res
-				case err: NoSuccess => throw new Exception(s"Invalid file name: ${err.msg}")
+				case err: NoSuccess => throw new Exception("Invalid file name: %s" format err.msg)
 			}
 		}
 	}
@@ -228,20 +230,30 @@ object core {
 			def accept(dir: File, filename: String): Boolean = filename.endsWith(".svg")
 		}
 		for (sourceFile <- sourceDirectory.listFiles(svgFileFilter)) {
-			val batchItem = fileNameParser.parse(sourceFile.getName)
-			val (generator, baseName) = batchItem.action match {
-				case "9" => (Some(generateNinePatchResources _), batchItem.baseName + ".9")
-				case action => (ImageKind.values.find(_.toString == action).map(generateFixedSizedResources), batchItem.baseName)
+			try {
+			autoConvert(sourceFile, resourcesDirectory, baseQualifiers)
+			} catch {
+				case UnknownActionError(action) => logger.error("Unknown action '{}' for file '{}'", action, sourceFile.getName)
 			}
+		}
+	}
 
-			generator match {
-				case Some(gen) =>
-					val doc = svg.load(sourceFile)
-					val qualifiers = batchItem.qualifiers.map(baseQualifiers.update(_)).getOrElse(baseQualifiers)
-					convert(gen, doc, baseName, resourcesDirectory, qualifiers)
+	case class UnknownActionError(action: String) extends Exception("Unknown action '%s'" format action)
 
-				case None => logger.error("Unknown action '{}' for file '{}'", batchItem.action, sourceFile.getName)
-			}
+	def autoConvert(sourceFile: File, resourcesDirectory: File, baseQualifiers: ResourceQualifiers = ResourceQualifiers.empty): Seq[File] = {
+		val batchItem = fileNameParser.parse(sourceFile.getName)
+		val (generator, baseName) = batchItem.action match {
+			case "9" => (Some(generateNinePatchResources _), batchItem.baseName + ".9")
+			case action => (ImageKind.values.find(_.toString == action).map(generateFixedSizedResources), batchItem.baseName)
+		}
+
+		generator match {
+			case Some(gen) =>
+				val doc = svg.load(sourceFile)
+				val qualifiers = batchItem.qualifiers.map(baseQualifiers.update(_)).getOrElse(baseQualifiers)
+				convert(gen, doc, baseName, resourcesDirectory, qualifiers)
+
+			case None => throw UnknownActionError(batchItem.action)
 		}
 	}
 
@@ -293,10 +305,10 @@ object core {
 
 	def renderTabSelectorResource(baseName: String): scala.xml.Elem = {
 		<selector xmlns:android="http://schemas.android.com/apk/res/android">
-			<item android:drawable={s"@drawable/${baseName}_selected"}
+			<item android:drawable={"@drawable/%s_selected" format baseName}
 			      android:state_selected="true"
 			      android:state_pressed="false" />
-			<item android:drawable={s"@drawable/${baseName}_unselected"} />
+			<item android:drawable={"@drawable/%s_unselected" format baseName} />
 		</selector>
 	}
 

@@ -6,6 +6,7 @@
         <option name="basePackage" value="net.kriomant.buketan" />
         <option name="deprecationWarnings" value="true" />
         <option name="fsc" value="true" />
+        <option name="languageLevel" value="Scala 2.9" />
         <option name="uncheckedWarnings" value="true" />
       </configuration>
     </facet>
@@ -30,21 +31,29 @@
     </orderEntry>
     <orderEntry type="library" exported="" name="org.apache.xmlgraphics:batik-codec:1.7" level="project" />
     <orderEntry type="library" exported="" name="org.apache.xmlgraphics:batik-transcoder:1.7" level="project" />
-    <orderEntry type="library" name="scala-2.10.0-RC2" level="application" />
-    <orderEntry type="module-library" scope="TEST">
-      <library>
-        <CLASSES>
-          <root url="jar://$USER_HOME$/.ivy2/cache/org.scalatest/scalatest_2.10.0-RC2/jars/scalatest_2.10.0-RC2-1.8.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="library" name="com.jhlabs:filters:2.0.235" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
           <root url="jar://$USER_HOME$/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.6.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="TEST">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.scalatest/scalatest_2.9.2/jars/scalatest_2.9.2-1.8.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.9.2.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

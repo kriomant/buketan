@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="buketan-pre" xmlns:ivy="antlib:org.apache.ivy.ant">
+	<property name="resource.svg.absolute.dir" location="res-svg"/>
+
+	<target name="fetch-buketan">
+		<ivy:resolve conf="buketan-tasks"/>
+		<ivy:cachepath pathid="buketan-task.path" conf="buketan-tasks"/>
+
+		<taskdef resource="buketan_ant.properties" classpathref="buketan-task.path"/>
+	</target>
+
+	<target name="-clean-temporary-resource-directory">
+		<delete dir="${out.res.tmp.absolute.dir}"/>
+		<mkdir dir="${out.res.tmp.absolute.dir}"/>
+	</target>
+
+	<target name="render-svg-resources" depends="fetch-buketan">
+		<buketan targetdirectory="${out.res.tmp.absolute.dir}">
+			<fileset dir="${resource.svg.absolute.dir}">
+				<include name="*.svg"/>
+			</fileset>
+		</buketan>
+	</target>
+
+	<target name="-copy-original-resources">
+		<copy todir="${out.res.tmp.absolute.dir}">
+			<fileset dir="${resource.absolute.dir}"/>
+		</copy>
+	</target>
+
+	<target name="buketan" depends="fetch-buketan, -clean-temporary-resource-directory, render-svg-resources, -copy-original-resources">
+	</target>
+
+    <target name="-crunch">
+        <exec executable="${aapt}" taskName="crunch">
+            <arg value="crunch" />
+            <arg value="-v" />
+            <arg value="-S" />
+            <arg path="${out.res.tmp.absolute.dir}" />
+            <arg value="-C" />
+            <arg path="${out.res.absolute.dir}" />
+        </exec>
+    </target>
+</project>
+

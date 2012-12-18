@@ -2,10 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/ant-plugin/ant-plugin.iml" filepath="$PROJECT_DIR$/ant-plugin/ant-plugin.iml" />
       <module fileurl="file://$PROJECT_DIR$/cmdline/cmdline.iml" filepath="$PROJECT_DIR$/cmdline/cmdline.iml" />
       <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
       <module fileurl="file://$PROJECT_DIR$/project/project.iml" filepath="$PROJECT_DIR$/project/project.iml" />
       <module fileurl="file://$PROJECT_DIR$/sbt-plugin/sbt-plugin.iml" filepath="$PROJECT_DIR$/sbt-plugin/sbt-plugin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test-ant-project/test-ant-project.iml" filepath="$PROJECT_DIR$/test-ant-project/test-ant-project.iml" />
       <module fileurl="file://$PROJECT_DIR$/test-sbt-project/test-sbt-project.iml" filepath="$PROJECT_DIR$/test-sbt-project/test-sbt-project.iml" />
     </modules>
   </component>

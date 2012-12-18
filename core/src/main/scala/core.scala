@@ -49,7 +49,7 @@ object core {
 	  * @return Sequence of created `ResourceIntent`s
 	  */
 	def mapDensities[T](values: (T, T, T, T))(f: T => ResourceIntent): Seq[ResourceIntent] = {
-		(values.productIterator.toSeq zip DENSITIES) map { case (value, density) =>
+		(values.productIterator.toList zip DENSITIES) map { case (value, density) =>
 			val variant = f(value.asInstanceOf[T])
 			variant.copy(qualifiers = variant.qualifiers.copy(screenPixelDensity=Some(density)))
 		}
@@ -67,7 +67,7 @@ object core {
 	  * @return Sequence of created `ResourceIntent`s
 	  */
 	def flatMapDensities[T](values: (T, T, T, T))(f: T => Seq[ResourceIntent]): Seq[ResourceIntent] = {
-		(values.productIterator.toSeq zip DENSITIES) flatMap { case (value, density) =>
+		(values.productIterator.toList zip DENSITIES) flatMap { case (value, density) =>
 			val variants = f(value.asInstanceOf[T])
 			variants map (v => v.copy(qualifiers = v.qualifiers.copy(screenPixelDensity=Some(density))))
 		}

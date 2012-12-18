@@ -1,0 +1,11 @@
+<ivy-module version="2.0">
+	<info organisation="net.kriomant" module="buketan"/>
+
+	<configurations>
+		<conf name="buketan-tasks" description="Ant task and dependencies for buketan plugin"/>
+	</configurations>
+
+	<dependencies>
+		<dependency org="net.kriomant.buketan" name="buketan-ant_2.9.2" rev="0.1-SNAPSHOT" conf="buketan-tasks->compile"/>
+	</dependencies>
+</ivy-module>

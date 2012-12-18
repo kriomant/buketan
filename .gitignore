@@ -4,3 +4,7 @@ out
 target
 .idea/workspace.xml
 resources/
+test-ant-project/bin
+test-ant-project/gen
+test-ant-project/local.properties
+

@@ -3,7 +3,9 @@ import Keys._
 
 object BuketanBuild extends Build {
 	val commonSettings = Defaults.defaultSettings ++ Seq(
-		scalaVersion := "2.9.2"
+		scalaVersion := "2.9.2",
+
+		organization := "net.kriomant.buketan"
 	)
 
 	lazy val root = Project("root", file(".")) aggregate (core, cmdline)
@@ -12,12 +14,16 @@ object BuketanBuild extends Build {
 		"core", file("core"), settings = commonSettings
 	) settings (
 		libraryDependencies ++= Seq(
+			"org.scala-lang" % "scala-compiler" % "2.9.2",
+			"org.scala-lang" % "scala-library" % "2.9.2",
 			"org.apache.xmlgraphics" % "batik-transcoder" % "1.7",
 			"org.apache.xmlgraphics" % "batik-codec" % "1.7",
 			"com.jhlabs" % "filters" % "2.0.235",
 			"org.slf4j" % "slf4j-api" % "1.6.6",
 			"org.scalatest" %% "scalatest" % "1.8" % "test"
-		)
+		),
+
+		ivyScala ~= { _.map(_.copy(checkExplicit = false, overrideScalaVersion = false, filterImplicit = false)) }
 	)
 
 	lazy val cmdline = Project(
@@ -30,16 +36,27 @@ object BuketanBuild extends Build {
 	)
 
 	lazy val sbt_plugin = Project(
-		"sbt-plugin", file("sbt-plugin")
+		"sbt-plugin", file("sbt-plugin"), settings = commonSettings
 	) settings (
 		sbtPlugin := true,
 		name := "buketan-sbt",
-		organization := "net.kriomant",
 		version := "0.1-SNAPSHOT",
-
-		scalaVersion := "2.9.2",
 
 		resolvers += Resolver.url("scalasbt releases", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns),
 		addSbtPlugin("org.scala-sbt" % "sbt-android-plugin" % "0.6.2")
+	) dependsOn (core)
+
+	lazy val ant_plugin = Project(
+		"ant-plugin", file("ant-plugin"), settings = commonSettings
+	) settings (
+		name := "buketan-ant",
+		version := "0.1-SNAPSHOT",
+
+		libraryDependencies ++= Seq(
+			"ant" % "ant" % "1.6.5"
+		),
+
+		ivyScala ~= { _.map(_.copy(checkExplicit = false, overrideScalaVersion = false, filterImplicit = false)) }
+
 	) dependsOn (core)
 }

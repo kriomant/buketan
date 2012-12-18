@@ -54,7 +54,7 @@ TODO
 
 SBT plugins depends on [SBT Android plugin by jberkel](https://github.com/jberkel/android-plugin).
 
-Just add `addSbtPlugin("net.kriomant" % "buketan-sbt" % "0.1-SNAPSHOT)` to your `project/plugins.sbt` and put SVG files to `res-svg` directory next to your `res`.
+Just add `addSbtPlugin("net.kriomant" % "buketan-sbt" % "0.1-SNAPSHOT)` to your `project/plugins.sbt`, include `BuketanPlugin.buketanSettings` to project settings and put SVG files to `res-svg` directory next to your `res`.
 
 See `test-sbt-project` for reference.
 

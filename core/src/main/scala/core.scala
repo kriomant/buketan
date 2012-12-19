@@ -107,6 +107,24 @@ object core {
 		)} :+ ResourceIntent(XmlRenderer(renderTabSelectorResource), ResourceQualifiers(platformVersion=Some(5)))
 	}
 
+	def generateSimpleResources(doc: SVGOMDocument): Seq[ResourceIntent] = {
+		val (ctx, gvt) = svg.prepareRendering(doc, createGvtMapping = true)
+
+		val intrinsicWidth = ctx.getDocumentSize.getWidth
+		val intrinsicHeight = ctx.getDocumentSize.getHeight
+		logger.debug("Image size: {}x{}", intrinsicWidth, intrinsicHeight)
+
+		// Use intrinsic document size for 'mdpi' density, scale image for
+		// other densities accordingly.
+		mapDensities((0.75, 1.0, 1.5, 2.0)) { scale =>
+			val width = (intrinsicWidth * scale).toInt
+			val height = (intrinsicHeight * scale).toInt
+			ResourceIntent(PngRenderer(
+				simpleRender(width, height)
+			))
+		}
+	}
+
 	def generateNinePatchResources(doc: SVGOMDocument): Seq[ResourceIntent] = {
 		val (ctx, gvt) = svg.prepareRendering(doc, createGvtMapping = true)
 
@@ -213,14 +231,14 @@ object core {
 	object fileNameParser extends RegexParsers {
 		val baseName = """(?i)\w+""".r
 		val action = """[\w\d-]+""".r
-		val qualifiers = """(?i)[\w\d-]+""".r ^^ ResourceQualifiers.parse
-		val directives = action ~ opt("," ~> qualifiers)
-		val fileName = (baseName ~ ("." ~> directives) <~ ".svg") ^^ { case n~(a~q) => BatchItem(n, a, q) }
+		val qualifiers = """(?i)[\w\d\-]+""".r ^^ ResourceQualifiers.parse
+		val directives = opt("." ~> action) ~ opt("," ~> qualifiers)
+		val fileName = (baseName ~ directives) ^^ { case n~(a~q) => BatchItem(n, a getOrElse "", q) }
 
 		def parse(s: String): BatchItem = {
 			parseAll(fileName, s) match {
 				case Success(res, _) => res
-				case err: NoSuccess => throw new Exception("Invalid file name: %s" format err.msg)
+				case err: NoSuccess => throw new Exception("""Invalid file name "%s": %s""" format (s, err.msg))
 			}
 		}
 	}
@@ -241,8 +259,9 @@ object core {
 	case class UnknownActionError(action: String) extends Exception("Unknown action '%s'" format action)
 
 	def autoConvert(sourceFile: File, resourcesDirectory: File, baseQualifiers: ResourceQualifiers = ResourceQualifiers.empty): Seq[File] = {
-		val batchItem = fileNameParser.parse(sourceFile.getName)
+		val batchItem = fileNameParser.parse(sourceFile.getName.stripSuffix(".svg"))
 		val (generator, baseName) = batchItem.action match {
+			case "" => (Some(generateSimpleResources _), batchItem.baseName)
 			case "9" => (Some(generateNinePatchResources _), batchItem.baseName + ".9")
 			case action => (ImageKind.values.find(_.toString == action).map(generateFixedSizedResources), batchItem.baseName)
 		}

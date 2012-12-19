@@ -40,9 +40,12 @@ All image types:
 * tab
 * 9 (for 9-patch images)
 
+If you omit action then buketan will render image with intrinsic size for *mdpi* screen density and scale image appropriately for another densities.
+
 ### 9-patch images
 
 9-patch images require additional markup: create rectangle with ID `stretch-area` and (optionally) rectangle with ID `content-area`. These rectangles may have any color or style as they will be hidden during rendering.
+9-patch images are scaled like simple images without action.
 
 ## Frontends
 

@@ -9,7 +9,7 @@ import java.awt.geom.Rectangle2D
 
 class coreTest extends FunSpec {
 
-	val noopRenderer: core.ResourceRenderer = core.PngRenderer(f => ???)
+	val noopRenderer: core.ResourceRenderer = core.PngRenderer(f => throw new UnsupportedOperationException)
 
 	describe("mapDensities") {
 		it("must set `screenPixelDensity` qualifier") {
@@ -101,6 +101,36 @@ class coreTest extends FunSpec {
 
 			val lastColumn = image.getData.getDataElements(65, 0, 1, 66, null).asInstanceOf[Array[Int]]
 			assert(lastColumn === Array.fill(5)(transparent) ++ Array.fill(50)(black) ++ Array.fill(11)(transparent))
+		}
+	}
+
+	describe("fileNameParser") {
+		it("should parse name with action") {
+			assert(
+				core.fileNameParser.parse("something.action-bar")
+				=== core.BatchItem("something", "action-bar", None)
+			)
+		}
+
+		it("should parse name without explicit action") {
+			assert(
+				core.fileNameParser.parse("something")
+				=== core.BatchItem("something", "", None)
+			)
+		}
+
+		it("should parse name with action and qualifiers") {
+			assert(
+				core.fileNameParser.parse("something.tab,sw800dp")
+				=== core.BatchItem("something", "tab", Some(ResourceQualifiers(_smallestWidth = Some("sw800dp"))))
+			)
+		}
+
+		it("should parse name without action but with qualifiers") {
+			assert(
+				core.fileNameParser.parse("something,sw800dp")
+				=== core.BatchItem("something", "", Some(ResourceQualifiers(_smallestWidth = Some("sw800dp"))))
+			)
 		}
 	}
 }

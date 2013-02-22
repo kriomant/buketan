@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="buketan-pre" xmlns:ivy="antlib:org.apache.ivy.ant">
+<project name="buketan" xmlns:ivy="antlib:org.apache.ivy.ant">
+    <property name="out.dir" value="bin"/>
+    <property name="resource.absolute.dir" location="res"/>
     <property name="resource.svg.absolute.dir" location="res-svg"/>
+    <property name="out.res-svg.absolute.dir" location="${out.dir}/res-svg"/>
 
 	<target name="fetch-buketan">
 		<property name="buketan.version" value="0.1-SNAPSHOT"/>
@@ -18,33 +21,40 @@
 	</target>
 
 	<target name="-clean-temporary-resource-directory">
-		<delete dir="${out.res.tmp.absolute.dir}"/>
-		<mkdir dir="${out.res.tmp.absolute.dir}"/>
+		<delete dir="${out.res-svg.absolute.dir}"/>
+		<mkdir dir="${out.res-svg.absolute.dir}"/>
 	</target>
 
 	<target name="render-svg-resources" depends="fetch-buketan">
-		<buketan targetdirectory="${out.res.tmp.absolute.dir}">
+		<buketan targetdirectory="${out.res-svg.absolute.dir}">
 			<fileset dir="${resource.svg.absolute.dir}">
 				<include name="*.svg"/>
 			</fileset>
 		</buketan>
 	</target>
 
-	<target name="-copy-original-resources">
-		<copy todir="${out.res.tmp.absolute.dir}">
-			<fileset dir="${resource.absolute.dir}"/>
+	<target name="-copy-svg-resources">
+		<copy todir="${out.res.absolute.dir}">
+			<fileset dir="${out.res-svg.absolute.dir}"/>
 		</copy>
 	</target>
 
-	<target name="buketan" depends="fetch-buketan, -clean-temporary-resource-directory, render-svg-resources, -copy-original-resources">
+	<target name="-buketan" depends="fetch-buketan, -clean-temporary-resource-directory, render-svg-resources, -copy-svg-resources">
 	</target>
 
-    <target name="-crunch" depends="buketan">
+	<!-- This is needed so '-code-gen' generate R.java records for rendered SVG resources. -->
+	<!-- Change this when http://code.google.com/p/android/issues/detail?id=34224 will be fixed. -->
+	<target name="-pre-build" depends="-buketan"/>
+
+	<!-- Add rendered SVG resources directory as source to 'aapt crunch' command. -->
+    <target name="-crunch">
         <exec executable="${aapt}" taskName="crunch">
             <arg value="crunch" />
             <arg value="-v" />
             <arg value="-S" />
-            <arg path="${out.res.tmp.absolute.dir}" />
+            <arg path="${resource.absolute.dir}" />
+            <arg value="-S" />
+            <arg path="${out.res-svg.absolute.dir}" />
             <arg value="-C" />
             <arg path="${out.res.absolute.dir}" />
         </exec>

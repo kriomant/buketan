@@ -87,9 +87,7 @@
     -->
     <!-- version-tag: custom -->
 
-	<import file="buketan-pre.xml"/>
+	<import file="buketan.xml"/>
+    <import file="${sdk.dir}/tools/ant/build.xml"/>
 
-    <import file="${sdk.dir}/tools/ant/build.xml" />
-
-	<import file="buketan-post.xml"/>
 </project>

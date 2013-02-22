@@ -11,5 +11,8 @@ public class MainActivity extends Activity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+		int chatResource = R.drawable.chat;
+		int testResource = R.drawable.test;
     }
 }

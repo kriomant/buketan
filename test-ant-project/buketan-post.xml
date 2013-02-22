@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project name="buketan-post">
-	<property name="out.res.tmp.absolute.dir" location="${out.dir}/res-tmp"/>
-</project>
-

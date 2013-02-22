@@ -83,6 +83,6 @@ See `test-sbt-project` for reference.
 
 ### Ant plugin
 
-See `test-ant-project/build.xml` for details on integration with Android Ant build process. Basically you just need to import one file before platform's `build.xml` and another after.
+Read [Ant plugin documentation](ant-plugin/README.md).
 
 

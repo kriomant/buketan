@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="buketan-pre" xmlns:ivy="antlib:org.apache.ivy.ant">
-	<property name="resource.svg.absolute.dir" location="res-svg"/>
+    <property name="resource.svg.absolute.dir" location="res-svg"/>
 
 	<target name="fetch-buketan">
 		<property name="buketan.version" value="0.1-SNAPSHOT"/>
-		<ivy:resolve inline="true"
+        <ivy:settings id="buketan.ivy.settings" file="buketan-ivysettings.xml"/>
+		<ivy:resolve settingsRef="buketan.ivy.settings" inline="true"
 			organisation="net.kriomant.buketan" module="ant-plugin_2.9.2"
 			conf="default" revision="${buketan.version}" resolveId="buketan"
 		/>
-		<ivy:cachepath pathid="buketan-task.path" inline="true"
+		<ivy:cachepath pathid="buketan-task.path" settingsRef="buketan.ivy.settings" inline="true"
 			organisation="net.kriomant.buketan" module="ant-plugin_2.9.2"
 			conf="default" revision="${buketan.version}"
 			resolveId="buketan"

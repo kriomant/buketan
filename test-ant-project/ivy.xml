@@ -6,6 +6,6 @@
 	</configurations>
 
 	<dependencies>
-		<dependency org="net.kriomant.buketan" name="buketan-ant_2.9.2" rev="0.1-SNAPSHOT" conf="buketan-tasks->compile"/>
+		<dependency org="net.kriomant.buketan" name="ant-plugin_2.9.2" rev="0.1-SNAPSHOT" conf="default->compile"/>
 	</dependencies>
 </ivy-module>

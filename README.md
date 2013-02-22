@@ -57,7 +57,27 @@ TODO
 
 SBT plugins depends on [SBT Android plugin by jberkel](https://github.com/jberkel/android-plugin).
 
-Just add `addSbtPlugin("net.kriomant.buketan" % "buketan-sbt" % "0.1-SNAPSHOT)` to your `project/plugins.sbt`, include `BuketanPlugin.buketanSettings` to project settings and put SVG files to `res-svg` directory next to your `res`.
+Just add following to  to your `project/plugins.sbt`:
+
+    resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
+    addSbtPlugin("net.kriomant.buketan" % "buketan-sbt" % "0.1-SNAPSHOT)
+
+include `BuketanPlugin.buketanSettings` to project settings:
+
+    object General {
+      ...
+      lazy val fullAndroidSettings =
+        General.settings ++
+        AndroidProject.androidSettings ++
+        TypedResources.settings ++
+        proguardSettings ++
+        AndroidManifestGenerator.settings ++
+        BuketanPlugin.buketanSettings ++ // <-----
+        AndroidMarketPublish.settings
+    }
+
+and put SVG files to `res-svg` directory next to your `res`.
 
 See `test-sbt-project` for reference.
 

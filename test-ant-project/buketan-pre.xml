@@ -3,9 +3,16 @@
 	<property name="resource.svg.absolute.dir" location="res-svg"/>
 
 	<target name="fetch-buketan">
-		<ivy:resolve conf="buketan-tasks"/>
-		<ivy:cachepath pathid="buketan-task.path" conf="buketan-tasks"/>
-
+		<property name="buketan.version" value="0.1-SNAPSHOT"/>
+		<ivy:resolve inline="true"
+			organisation="net.kriomant.buketan" module="ant-plugin_2.9.2"
+			conf="default" revision="${buketan.version}" resolveId="buketan"
+		/>
+		<ivy:cachepath pathid="buketan-task.path" inline="true"
+			organisation="net.kriomant.buketan" module="ant-plugin_2.9.2"
+			conf="default" revision="${buketan.version}"
+			resolveId="buketan"
+		/>
 		<taskdef resource="buketan_ant.properties" classpathref="buketan-task.path"/>
 	</target>
 
@@ -31,7 +38,7 @@
 	<target name="buketan" depends="fetch-buketan, -clean-temporary-resource-directory, render-svg-resources, -copy-original-resources">
 	</target>
 
-    <target name="-crunch">
+    <target name="-crunch" depends="buketan">
         <exec executable="${aapt}" taskName="crunch">
             <arg value="crunch" />
             <arg value="-v" />

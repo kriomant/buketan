@@ -3,12 +3,49 @@ import Keys._
 
 object BuketanBuild extends Build {
 	val commonSettings = Defaults.defaultSettings ++ Seq(
+		version := "0.1-SNAPSHOT",
 		scalaVersion := "2.9.2",
 
-		organization := "net.kriomant.buketan"
+		organization := "net.kriomant.buketan",
+
+		// Publishing by instructions from http://www.scala-sbt.org/release/docs/Community/Using-Sonatype.html
+		publishMavenStyle := true,
+		publishTo <<= version { v =>
+			val nexus = "https://oss.sonatype.org/"
+			Some(
+				if (v.endsWith("SNAPSHOT"))
+					"snapshots" at nexus + "content/repositories/snapshots"
+				else
+					"releases" at nexus + "service/local/staging/deploy/maven2"
+			)
+		},
+		publishArtifact in Test := false,
+		homepage := Some(url("https://github.com/kriomant/buketan")),
+		licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php")),
+		pomIncludeRepository := { _ => false },
+		pomExtra := (
+			<scm>
+				<url>git@github.com:kriomant/buketan.git</url>
+				<connection>scm:git:git@github.com:kriomant/buketan.git</connection>
+			</scm>
+			<developers>
+				<developer>
+					<id>kriomant</id>
+					<name>Mikhail Trishchenkov</name>
+					<url>http://kriomant.net</url>
+				</developer>
+			</developers>
+		)
 	)
 
-	lazy val root = Project("root", file(".")) aggregate (core, cmdline)
+	lazy val root = Project(
+		"root", file("."), settings = commonSettings
+	) settings (
+		// This project is virtual, no need to publish it.
+		publishArtifact := false
+	) aggregate (
+		core, cmdline, sbt_plugin, ant_plugin
+	)
 
 	lazy val core = Project(
 		"core", file("core"), settings = commonSettings
@@ -39,8 +76,7 @@ object BuketanBuild extends Build {
 		"sbt-plugin", file("sbt-plugin"), settings = commonSettings
 	) settings (
 		sbtPlugin := true,
-		name := "buketan-sbt",
-		version := "0.1-SNAPSHOT",
+		//organization ~= (_+".sbt"),
 
 		resolvers += Resolver.url("scalasbt releases", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns),
 		addSbtPlugin("org.scala-sbt" % "sbt-android-plugin" % "0.6.2")
@@ -49,9 +85,6 @@ object BuketanBuild extends Build {
 	lazy val ant_plugin = Project(
 		"ant-plugin", file("ant-plugin"), settings = commonSettings
 	) settings (
-		name := "buketan-ant",
-		version := "0.1-SNAPSHOT",
-
 		libraryDependencies ++= Seq(
 			"ant" % "ant" % "1.6.5"
 		),

@@ -9,5 +9,8 @@ class MainActivity extends Activity with TypedActivity {
     setContentView(R.layout.main)
 
     findView(TR.textview).setText("hello, world!")
+
+	  val chatRes = R.drawable.chat
+	  val testRes = R.drawable.test
   }
 }

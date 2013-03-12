@@ -1,8 +1,9 @@
 import sbt._
 import Keys._
+import com.typesafe.sbt.SbtStartScript.startScriptForJarSettings
 
 object BuketanBuild extends Build {
-	val commonSettings = Defaults.defaultSettings ++ Seq(
+	val commonSettings = Defaults.defaultSettings ++ startScriptForJarSettings ++ Seq(
 		version := "0.1-SNAPSHOT",
 		scalaVersion := "2.9.2",
 
@@ -66,10 +67,13 @@ object BuketanBuild extends Build {
 	lazy val cmdline = Project(
 		"cmdline", file("cmdline"), settings = commonSettings
 	) dependsOn (core) settings (
+		resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+
 		libraryDependencies ++= Seq(
 			"ch.qos.logback" % "logback-classic" % "0.9.30",
-			"net.elehack.argparse4s" %% "argparse4s" % "0.2"
-		)
+			"net.elehack.argparse4s" %% "argparse4s" % "0.2.2-SNAPSHOT"
+		),
+		fork in run := true
 	)
 
 	lazy val sbt_plugin = Project(

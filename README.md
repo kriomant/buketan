@@ -51,7 +51,27 @@ If you omit action then buketan will render image with intrinsic size for *mdpi*
 
 ### Command line interface
 
-TODO
+Just execute `sbt cmdline/stage` once. Then you may use `cmdline/target/start` script to start
+command line tool from anywhere:
+
+    $ cmdline/target/start --help
+    usage: buketan [-h]
+                   {action-bar,notification,launcher,list-view,tab,9-patch,batch}
+                   ...
+
+    positional arguments:
+      {action-bar,notification,launcher,list-view,tab,9-patch,batch}
+
+    optional arguments:
+      -h, --help             show this help message and exit
+
+Convert all SVG files in directory:
+
+    $ cmdline/target/start batch svgs-dir resources
+
+Convert just one SVG file with explicit type:
+
+    $ cmdline/target/start action-bar chat.svg resources
 
 ### SBT plugin
 

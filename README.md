@@ -8,6 +8,57 @@ Want to quickly prototype your new Android application? Just draw or find SVG fi
 
 Of course, creating all icons by hands is always better, but it is not always possible or needed.
 
+## Examples
+
+Here are source SVG files (in fact, shown images are rendered PNGs, but you may click on image to view actual
+SVG):
+
+### Action bar icon
+
+[![chat icon](svgs/chat.action-bar.svg) chat.action-bar.svg](svgs/chat.action-bar.svg)
+⇓
+- [![](resources/drawable-hdpi/chat.png) drawable-hdpi/chat.png](resources/drawable-hdpi/chat.png)
+- [![](resources/drawable-mdpi/chat.png) drawable-mdpi/chat.png](resources/drawable-mdpi/chat.png)
+- [![](resources/drawable-ldpi/chat.png) drawable-ldpi/chat.png](resources/drawable-ldpi/chat.png)
+
+### Notification icon
+
+[![location icon](svgs/location.notification.svg) location.notification.svg](svgs/location.notification.svg)
+⇓
+- [![](resources/drawable-hdpi/location.png) drawable-hdpi/chat.png](resources/drawable-hdpi/location.png)
+- [![](resources/drawable-mdpi/location.png) drawable-mdpi/chat.png](resources/drawable-mdpi/location.png)
+- [![](resources/drawable-ldpi/location.png) drawable-ldpi/chat.png](resources/drawable-ldpi/location.png)
+- [![](resources/drawable-hdpi-v9/location.png) drawable-hdpi-v9/chat.png](resources/drawable-hdpi-v9/location.png)
+- [![](resources/drawable-mdpi-v9/location.png) drawable-mdpi-v9/chat.png](resources/drawable-mdpi-v9/location.png)
+- [![](resources/drawable-ldpi-v9/location.png) drawable-ldpi-v9/chat.png](resources/drawable-ldpi-v9/location.png)
+- [![](resources/drawable-hdpi-v11/location.png) drawable-hdpi-v11/chat.png](resources/drawable-hdpi-v11/location.png) (it's white with transparent background, so it's not visible in browser)
+- [![](resources/drawable-mdpi-v11/location.png) drawable-mdpi-v11/chat.png](resources/drawable-mdpi-v11/location.png) (it's white with transparent background, so it's not visible in browser)
+- [![](resources/drawable-ldpi-v11/location.png) drawable-ldpi-v11/chat.png](resources/drawable-ldpi-v11/location.png) (it's white with transparent background, so it's not visible in browser)
+
+### Tab icon
+
+[![tab icon](svgs/camera.tab.svg) camera.tab.svg](svgs/camera.tab.svg)
+⇓
+- resources/drawable-v5
+    - [camera.xml](resources/drawable-v5/camera.xml)
+- resources/drawable-hdpi-v5
+    - [![](resources/drawable-hdpi-v5/camera_selected.png) camera_selected.png](resources/drawable-hdpi-v5/camera_selected.png)
+    - [![](resources/drawable-hdpi-v5/camera_unselected.png) camera_unselected.png](resources/drawable-hdpi-v5/camera_unselected.png)
+- resources/drawable-mdpi-v5
+    - [![](resources/drawable-mdpi-v5/camera_selected.png) camera_selected.png](resources/drawable-mdpi-v5/camera_selected.png)
+    - [![](resources/drawable-mdpi-v5/camera_unselected.png) camera_unselected.png](resources/drawable-mdpi-v5/camera_unselected.png)
+- resources/drawable-ldpi-v5
+    - [![](resources/drawable-ldpi-v5/camera_selected.png) camera_selected.png](resources/drawable-ldpi-v5/camera_selected.png)
+    - [![](resources/drawable-ldpi-v5/camera_unselected.png) camera_unselected.png](resources/drawable-ldpi-v5/camera_unselected.png)
+
+### 9-patch image
+
+[![9-patch icon](svgs/test.9.svg) test.9.svg](svgs/test.9.svg)
+⇓
+- [![](resources/drawable-hdpi/test.9.png) drawable-hdpi/test.9.png](resources/drawable-hdpi/test.9.png)
+- [![](resources/drawable-mdpi/test.9.png) drawable-mdpi/test.9.png](resources/drawable-mdpi/test.9.png)
+- [![](resources/drawable-ldpi/test.9.png) drawable-ldpi/test.9.png](resources/drawable-ldpi/test.9.png)
+
 ## Supported resources
 
 * action bar icons

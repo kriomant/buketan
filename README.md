@@ -10,12 +10,12 @@ Of course, creating all icons by hands is always better, but it is not always po
 
 ## Examples
 
-Here are source SVG files (in fact, shown images are rendered PNGs, but you may click on image to view actual
-SVG):
+Below are source SVG images and resources they produce.
+In fact, source images are rendered PNGs, because GitHub doesn't return correct MIME type for SVG files, but you may click on image to view actual SVG.
 
 ### Action bar icon
 
-[![chat icon](svgs/chat.action-bar.svg) chat.action-bar.svg](svgs/chat.action-bar.svg)
+[![chat icon](assets/chat.action-bar.png) chat.action-bar.svg](svgs/chat.action-bar.svg)
 ⇓
 - [![](resources/drawable-hdpi/chat.png) drawable-hdpi/chat.png](resources/drawable-hdpi/chat.png)
 - [![](resources/drawable-mdpi/chat.png) drawable-mdpi/chat.png](resources/drawable-mdpi/chat.png)
@@ -23,7 +23,7 @@ SVG):
 
 ### Notification icon
 
-[![location icon](svgs/location.notification.svg) location.notification.svg](svgs/location.notification.svg)
+[![location icon](assets/location.notification.png) location.notification.svg](svgs/location.notification.svg)
 ⇓
 - [![](resources/drawable-hdpi/location.png) drawable-hdpi/chat.png](resources/drawable-hdpi/location.png)
 - [![](resources/drawable-mdpi/location.png) drawable-mdpi/chat.png](resources/drawable-mdpi/location.png)
@@ -37,7 +37,7 @@ SVG):
 
 ### Tab icon
 
-[![tab icon](svgs/camera.tab.svg) camera.tab.svg](svgs/camera.tab.svg)
+[![tab icon](assets/camera.tab.png) camera.tab.svg](svgs/camera.tab.svg)
 ⇓
 - resources/drawable-v5
     - [camera.xml](resources/drawable-v5/camera.xml)
@@ -53,7 +53,7 @@ SVG):
 
 ### 9-patch image
 
-[![9-patch icon](svgs/test.9.svg) test.9.svg](svgs/test.9.svg)
+[![9-patch icon](assets/test.9.png) test.9.svg](svgs/test.9.svg)
 ⇓
 - [![](resources/drawable-hdpi/test.9.png) drawable-hdpi/test.9.png](resources/drawable-hdpi/test.9.png)
 - [![](resources/drawable-mdpi/test.9.png) drawable-mdpi/test.9.png](resources/drawable-mdpi/test.9.png)

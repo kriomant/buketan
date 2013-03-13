@@ -73,7 +73,8 @@ object BuketanBuild extends Build {
 			"ch.qos.logback" % "logback-classic" % "0.9.30",
 			"net.elehack.argparse4s" %% "argparse4s" % "0.2.2-SNAPSHOT"
 		),
-		fork in run := true
+		fork in run := true,
+		baseDirectory in run <<= baseDirectory in ThisBuild
 	)
 
 	lazy val sbt_plugin = Project(

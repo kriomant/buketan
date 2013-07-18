@@ -70,7 +70,9 @@ In fact, source images are rendered PNGs, because GitHub doesn't return correct 
 
 ## Installation
 
-Unfortunately, buketan isn't uploaded to any artifactory for now, so you have to checkout source and execute `sbt publish-local` to get it working.
+Version 0.1-SNAPSHOT is published to Sonatype OSS Snapshots repository at https://oss.sonatype.org/content/repositories/snapshots , so just add it to you dependency management system.
+
+If you want to be sure you use latest source or you want to hack it yourself, checkout source and publish to local repository with `sbt publish-local`.
 
 ## Usage
 
@@ -132,7 +134,7 @@ Just add following to  to your `project/plugins.sbt`:
 
     resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-    addSbtPlugin("net.kriomant.buketan" % "buketan-sbt" % "0.1-SNAPSHOT)
+    addSbtPlugin("net.kriomant.buketan" % "sbt-plugin" % "0.1-SNAPSHOT)
 
 include `BuketanPlugin.buketanSettings` to project settings:
 

@@ -23,6 +23,7 @@ object core {
 		val Launcher = Value("launcher")
 		val ListView = Value("list-view")
 		val Tab = Value("tab")
+		val NavigationDrawerIndicator = Value("nav-drawer-indicator")
 	}
 
 	val DENSITIES = Seq("ldpi", "mdpi", "hdpi", "xhdpi")
@@ -105,6 +106,10 @@ object core {
 			ResourceIntent(PngRenderer(renderTabV5Unselected(size, padding)), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("unselected")),
 			ResourceIntent(PngRenderer(renderTabV5Selected(size, padding)), ResourceQualifiers(platformVersion=Some(5)), nameSuffix=Some("selected"))
 		)} :+ ResourceIntent(XmlRenderer(renderTabSelectorResource), ResourceQualifiers(platformVersion=Some(5)))
+
+        case ImageKind.NavigationDrawerIndicator => mapDensities((12, 16, 24, 32)) { size =>
+			ResourceIntent(PngRenderer(simpleRender(size, size)))
+		}
 	}
 
 	def generateSimpleResources(doc: SVGOMDocument): Seq[ResourceIntent] = {

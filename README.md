@@ -66,6 +66,7 @@ In fact, source images are rendered PNGs, because GitHub doesn't return correct 
 * launcher icons
 * list icons
 * tab icons
+* navigation drawer indicators
 * 9-patch resources (additional SVG markup needed)
 
 ## Installation
@@ -91,6 +92,7 @@ All image types:
 * launcher
 * list-view
 * tab
+* nav-drawer-indicator
 * 9 (for 9-patch images)
 
 If you omit action then buketan will render image with intrinsic size for *mdpi* screen density and scale image appropriately for another densities.

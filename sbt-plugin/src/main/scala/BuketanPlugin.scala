@@ -83,6 +83,6 @@ object BuketanPlugin extends Plugin {
 
 		extractApkLibDependencies <+= svgResourcesLibraryProject,
 
-		target in renderSvgResources <<= sourceManaged { source => source / ".." / "resources.svg" }
+		target in renderSvgResources <<= target { target => target / "resources.svg" }
 	))
 }

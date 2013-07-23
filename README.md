@@ -71,7 +71,9 @@ In fact, source images are rendered PNGs, because GitHub doesn't return correct 
 
 ## Installation
 
-Version 0.1-SNAPSHOT is published to Sonatype OSS Snapshots repository at https://oss.sonatype.org/content/repositories/snapshots , so just add it to you dependency management system.
+Current stable version 0.1 is published to Maven Central.
+
+Development version 0.2-SNAPSHOTS is published to Sonatype OSS Snapshots repository at https://oss.sonatype.org/content/repositories/snapshots.
 
 If you want to be sure you use latest source or you want to hack it yourself, checkout source and publish to local repository with `sbt publish-local`.
 
@@ -134,9 +136,13 @@ SBT plugins depends on [SBT Android plugin by jberkel](https://github.com/jberke
 
 Just add following to  to your `project/plugins.sbt`:
 
+    addSbtPlugin("net.kriomant.buketan" % "sbt-plugin" % "0.1")
+
+or (for development version):
+
     resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-    addSbtPlugin("net.kriomant.buketan" % "sbt-plugin" % "0.1-SNAPSHOT)
+    addSbtPlugin("net.kriomant.buketan" % "sbt-plugin" % "0.2-SNAPSHOT")
 
 include `BuketanPlugin.buketanSettings` to project settings:
 

@@ -4,7 +4,7 @@ import com.typesafe.sbt.SbtStartScript.startScriptForJarSettings
 
 object BuketanBuild extends Build {
 	val commonSettings = Defaults.defaultSettings ++ startScriptForJarSettings ++ Seq(
-		version := "0.1-SNAPSHOT",
+		version := "0.1",
 		scalaVersion := "2.9.2",
 
 		organization := "net.kriomant.buketan",

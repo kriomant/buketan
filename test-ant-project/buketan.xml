@@ -6,7 +6,7 @@
     <property name="out.res-svg.absolute.dir" location="${out.dir}/res-svg"/>
 
 	<target name="fetch-buketan">
-		<property name="buketan.version" value="0.1-SNAPSHOT"/>
+		<property name="buketan.version" value="0.1"/>
         <ivy:settings id="buketan.ivy.settings" file="buketan-ivysettings.xml"/>
 		<ivy:resolve settingsRef="buketan.ivy.settings" inline="true"
 			organisation="net.kriomant.buketan" module="ant-plugin_2.9.2"
